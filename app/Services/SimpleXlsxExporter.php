@@ -89,10 +89,43 @@ class SimpleXlsxExporter
         $rows[] = ['style' => 2, 'cells' => ['Ringkasan Keuangan', 'Nilai']];
         $rows[] = ['style' => 0, 'cells' => ['Periode Laporan', $monthLabel . ' (' . $report['selectedMonth'] . ')']];
         $rows[] = ['style' => 0, 'cells' => ['Total Penghasilan Bulan Terpilih', $this->formatRupiah($report['filteredRevenue'])]];
-        $rows[] = ['style' => 0, 'cells' => ['Penghasilan 1 Minggu Terakhir', $this->formatRupiah($report['weeklyRevenue'])]];
-        $rows[] = ['style' => 0, 'cells' => ['Penghasilan 1 Bulan Terakhir (30 Hari)', $this->formatRupiah($report['monthlyRollingRevenue'])]];
+        $rows[] = ['style' => 0, 'cells' => ['Pemasukan Hari Ini (' . ($report['todayLabel'] ?? '') . ')', $this->formatRupiah($report['dailyRevenue'])]];
+        $rows[] = ['style' => 0, 'cells' => ['Pemasukan Minggu Ini (' . ($report['currentWeekLabel'] ?? '') . ')', $this->formatRupiah($report['weeklyRevenue'])]];
         $rows[] = ['style' => 0, 'cells' => ['Jumlah Transaksi Bulan Terpilih', (int) $report['filteredTransactionCount']]];
         $rows[] = ['style' => 0, 'cells' => ['Total Unit Figura Terjual', (int) $report['filteredUnitsSold']]];
+        $rows[] = ['style' => 0, 'cells' => []];
+
+        $rows[] = ['style' => 1, 'cells' => ['PEMASUKAN TIAP MINGGU - ' . mb_strtoupper($monthLabel)]];
+        $rows[] = ['style' => 2, 'cells' => ['Minggu', 'Rentang Tanggal', 'Jumlah Transaksi', 'Total Pemasukan']];
+        foreach (($report['weeklyBreakdown'] ?? []) as $week) {
+            $rows[] = [
+                'style' => 0,
+                'cells' => [
+                    (string) $week['label'],
+                    (string) $week['range_label'],
+                    (int) $week['transaction_count'],
+                    $this->formatRupiah($week['total_revenue']),
+                ],
+            ];
+        }
+        $rows[] = ['style' => 0, 'cells' => []];
+
+        $rows[] = ['style' => 1, 'cells' => ['PEMASUKAN SETIAP HARI - ' . mb_strtoupper($monthLabel)]];
+        $rows[] = ['style' => 2, 'cells' => ['Tanggal', 'Jumlah Transaksi', 'Total Pemasukan']];
+        if (! empty($report['dailyBreakdown']) && count($report['dailyBreakdown']) > 0) {
+            foreach ($report['dailyBreakdown'] as $day) {
+                $rows[] = [
+                    'style' => 0,
+                    'cells' => [
+                        (string) $day['label'],
+                        (int) $day['transaction_count'],
+                        $this->formatRupiah($day['total_revenue']),
+                    ],
+                ];
+            }
+        } else {
+            $rows[] = ['style' => 0, 'cells' => ['Belum ada pemasukan harian pada periode ini.']];
+        }
         $rows[] = ['style' => 0, 'cells' => []];
 
         $rows[] = ['style' => 1, 'cells' => ['FIGURA PALING BANYAK TERJUAL BULAN INI']];

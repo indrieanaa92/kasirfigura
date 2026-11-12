@@ -24,13 +24,13 @@
             <td colspan="4"></td>
         </tr>
         <tr>
-            <td>Penghasilan 1 Minggu Terakhir</td>
-            <td>Rp {{ number_format($weeklyRevenue, 0, ',', '.') }}</td>
+            <td>Pemasukan Hari Ini ({{ $todayLabel }})</td>
+            <td>Rp {{ number_format($dailyRevenue, 0, ',', '.') }}</td>
             <td colspan="4"></td>
         </tr>
         <tr>
-            <td>Penghasilan 1 Bulan Terakhir (30 Hari)</td>
-            <td>Rp {{ number_format($monthlyRollingRevenue, 0, ',', '.') }}</td>
+            <td>Pemasukan Minggu Ini ({{ $currentWeekLabel }})</td>
+            <td>Rp {{ number_format($weeklyRevenue, 0, ',', '.') }}</td>
             <td colspan="4"></td>
         </tr>
         <tr>

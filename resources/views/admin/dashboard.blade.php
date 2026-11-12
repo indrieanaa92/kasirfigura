@@ -16,7 +16,7 @@
                     </span>
                     <h1 class="mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight">Dashboard Keuangan &amp; Penjualan</h1>
                     <p class="mt-1 text-sm text-stone-300">
-                        Pantau omzet mingguan, bulanan, produk terlaris, dan arsip pembukuan per bulan.
+                        Pantau pemasukan harian, mingguan, produk terlaris, dan arsip pembukuan per bulan.
                     </p>
                 </div>
 
@@ -51,15 +51,15 @@
         {{-- Revenue Widgets --}}
         <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
             <div class="rounded-2xl bg-gradient-to-br from-amber-700 via-amber-600 to-orange-600 p-5 text-white shadow-lg shadow-amber-700/20">
-                <p class="text-xs font-semibold uppercase tracking-wider text-amber-100">Penghasilan 1 Minggu Terakhir</p>
-                <p class="mt-2 text-2xl font-extrabold">Rp {{ number_format($weeklyRevenue, 0, ',', '.') }}</p>
-                <p class="mt-1 text-xs text-amber-100/90">Akumulasi 7 hari terakhir</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-amber-100">Pemasukan Hari Ini</p>
+                <p class="mt-2 text-2xl font-extrabold">Rp {{ number_format($dailyRevenue, 0, ',', '.') }}</p>
+                <p class="mt-1 text-xs text-amber-100/90">{{ $todayLabel }} &bull; {{ $dailyTransactionCount }} transaksi</p>
             </div>
 
             <div class="rounded-2xl bg-white p-5 border border-stone-200/80 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Penghasilan 1 Bulan Terakhir</p>
-                <p class="mt-2 text-2xl font-extrabold text-amber-700">Rp {{ number_format($monthlyRollingRevenue, 0, ',', '.') }}</p>
-                <p class="mt-1 text-xs text-stone-500">Akumulasi 30 hari terakhir</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Pemasukan Minggu Ini</p>
+                <p class="mt-2 text-2xl font-extrabold text-amber-700">Rp {{ number_format($weeklyRevenue, 0, ',', '.') }}</p>
+                <p class="mt-1 text-xs text-stone-500">{{ $currentWeekLabel }} &bull; {{ $weeklyTransactionCount }} transaksi</p>
             </div>
 
             <div class="rounded-2xl bg-white p-5 border border-stone-200/80 shadow-sm">
@@ -72,6 +72,82 @@
                 <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Volume ({{ $monthLabel }})</p>
                 <p class="mt-2 text-2xl font-extrabold text-stone-900">{{ $filteredTransactionCount }} Transaksi</p>
                 <p class="mt-1 text-xs text-stone-500">{{ $filteredUnitsSold }} unit figura terjual</p>
+            </div>
+        </section>
+
+        {{-- Daily & Weekly Revenue Breakdown --}}
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {{-- Daily Breakdown --}}
+            <div class="rounded-2xl bg-white border border-stone-200/80 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-base font-bold text-stone-900">Pemasukan Setiap Hari</h2>
+                        <p class="text-xs text-stone-500">Rincian pemasukan harian pada {{ $monthLabel }}</p>
+                    </div>
+                    <span class="inline-flex rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                        {{ $dailyBreakdown->count() }} Hari Aktif
+                    </span>
+                </div>
+
+                <div class="max-h-72 overflow-y-auto divide-y divide-stone-100">
+                    @forelse ($dailyBreakdown as $day)
+                        <div class="px-6 py-3.5 flex items-center justify-between gap-3 hover:bg-amber-50/30 transition">
+                            <div>
+                                <p class="text-sm font-semibold text-stone-800">{{ $day['label'] }}</p>
+                                <p class="text-xs text-stone-500">{{ $day['transaction_count'] }} transaksi</p>
+                            </div>
+                            <p class="text-sm font-bold text-amber-700 whitespace-nowrap">
+                                Rp {{ number_format($day['total_revenue'], 0, ',', '.') }}
+                            </p>
+                        </div>
+                    @empty
+                        <p class="px-6 py-8 text-sm text-stone-500 text-center">
+                            Belum ada pemasukan harian pada bulan {{ $monthLabel }}.
+                        </p>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Weekly Breakdown --}}
+            <div class="rounded-2xl bg-white border border-stone-200/80 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-base font-bold text-stone-900">Pemasukan Tiap Minggu</h2>
+                        <p class="text-xs text-stone-500">Rekap per minggu pada {{ $monthLabel }}</p>
+                    </div>
+                    <span class="inline-flex rounded-full bg-stone-100 px-2.5 py-1 text-xs font-semibold text-stone-700">
+                        {{ $weeklyBreakdown->count() }} Minggu
+                    </span>
+                </div>
+
+                @php
+                    $maxWeeklyRevenue = max(1, (float) ($weeklyBreakdown->max('total_revenue') ?? 0));
+                @endphp
+                <div class="p-6 space-y-4">
+                    @foreach ($weeklyBreakdown as $week)
+                        @php
+                            $weekPercent = $week['total_revenue'] > 0
+                                ? min(100, round(($week['total_revenue'] / $maxWeeklyRevenue) * 100))
+                                : 0;
+                        @endphp
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between gap-3 text-sm">
+                                <div>
+                                    <span class="font-bold text-stone-900">{{ $week['label'] }}</span>
+                                    <span class="text-xs text-stone-500 ml-1">({{ $week['range_label'] }})</span>
+                                </div>
+                                <div class="text-right whitespace-nowrap">
+                                    <span class="font-bold text-amber-700">Rp {{ number_format($week['total_revenue'], 0, ',', '.') }}</span>
+                                    <span class="text-xs text-stone-500 ml-1">&bull; {{ $week['transaction_count'] }} trx</span>
+                                </div>
+                            </div>
+                            <div class="h-2 w-full rounded-full bg-stone-100 overflow-hidden">
+                                <div class="h-full rounded-full bg-gradient-to-r from-amber-600 to-orange-500"
+                                     style="width: {{ $weekPercent }}%"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </section>
 

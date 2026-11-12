@@ -236,9 +236,11 @@ class KasirFiguraPosTest extends TestCase
 
         // Verify SalesReportService aggregations & export view rendering
         $report = app(SalesReportService::class)->getMonthlyReport(now()->format('Y-m'));
+        $this->assertSame(270000.0, $report['dailyRevenue']);
         $this->assertSame(270000.0, $report['weeklyRevenue']);
-        $this->assertSame(270000.0, $report['monthlyRollingRevenue']);
         $this->assertSame(270000.0, $report['filteredRevenue']);
+        $this->assertCount(1, $report['dailyBreakdown']);
+        $this->assertGreaterThanOrEqual(4, $report['weeklyBreakdown']->count());
         $this->assertSame(2, (int) $report['topProducts']->first()->total_qty);
 
         // Soft delete product preserves historical report visibility
