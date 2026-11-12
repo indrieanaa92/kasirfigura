@@ -24,7 +24,8 @@ foreach ($directories as $directory) {
 }
 
 $envOverrides = [
-    'APP_NAME' => 'Kasir Figura POS',
+    'APP_NAME' => 'Inul Wijaya Frame',
+    'STORE_NAME' => 'INUL WIJAYA FRAME',
     'APP_ENV' => 'production',
     'APP_DEBUG' => 'false',
     'APP_LOCALE' => 'id',

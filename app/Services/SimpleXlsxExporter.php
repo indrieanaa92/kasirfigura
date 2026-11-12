@@ -83,7 +83,7 @@ class SimpleXlsxExporter
         $rows = [];
         $monthLabel = (string) ($report['monthLabel'] ?? '');
 
-        $rows[] = ['style' => 1, 'cells' => ['LAPORAN PENJUALAN FIGURA - ' . mb_strtoupper($monthLabel)]];
+        $rows[] = ['style' => 1, 'cells' => ['LAPORAN PENJUALAN INUL WIJAYA FRAME - ' . mb_strtoupper($monthLabel)]];
         $rows[] = ['style' => 0, 'cells' => []];
 
         $rows[] = ['style' => 2, 'cells' => ['Ringkasan Keuangan', 'Nilai']];

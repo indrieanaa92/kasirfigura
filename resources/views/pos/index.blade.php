@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Kasir POS - Penjualan Figura')
+@section('title', 'Kasir POS - Inul Wijaya Frame')
 
 @section('content')
 <style>
@@ -73,8 +73,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-tight">Kasir POS Penjualan Figura</h1>
-                    <p class="text-xs text-amber-200/90">Kasir Aktif: <span class="font-semibold text-white">{{ auth()->user()->name }}</span></p>
+                    <h1 class="text-lg font-bold tracking-tight">Inul Wijaya Frame</h1>
+                    <p class="text-xs text-amber-200/90">Kasir POS &bull; Kasir Aktif: <span class="font-semibold text-white">{{ auth()->user()->name }}</span></p>
                 </div>
             </div>
 

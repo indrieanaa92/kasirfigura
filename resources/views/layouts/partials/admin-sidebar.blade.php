@@ -7,7 +7,7 @@
             </svg>
         </div>
         <div class="min-w-0">
-            <p class="text-sm font-bold truncate">Galeri Figura</p>
+            <p class="text-sm font-bold truncate">Inul Wijaya Frame</p>
             <p class="text-[11px] text-amber-200/80 truncate">{{ auth()->user()->name }}</p>
         </div>
     </div>
@@ -44,7 +44,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm font-bold tracking-wide text-white">Galeri Figura</p>
+                    <p class="text-sm font-bold tracking-wide text-white">Inul Wijaya Frame</p>
                     <p class="text-xs text-amber-200/80">Admin Panel POS</p>
                 </div>
             </div>

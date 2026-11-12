@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Produk Figura - Admin')
+@section('title', 'Manajemen Produk - Inul Wijaya Frame')
 
 @section('content')
 <div x-data="{ sidebarOpen: false }" class="min-h-screen flex flex-col lg:flex-row bg-stone-50">

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Masuk - Kasir Figura POS')
+@section('title', 'Masuk - Inul Wijaya Frame')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-950 via-stone-900 to-amber-950 p-4 sm:p-6">
@@ -13,8 +13,8 @@
                     Sistem Point of Sale
                 </div>
                 <h1 class="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight text-white">
-                    Galeri &amp; Kasir<br>
-                    <span class="text-amber-300">Penjualan Figura</span>
+                    Inul Wijaya<br>
+                    <span class="text-amber-300">Frame</span>
                 </h1>
                 <p class="mt-3 text-sm text-stone-300 leading-relaxed">
                     Kelola transaksi kasir lebih cepat, pantau stok bingkai &amp; figura secara real-time, serta unduh laporan keuangan bulanan dalam satu klik.
