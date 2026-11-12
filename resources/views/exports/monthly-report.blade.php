@@ -77,13 +77,15 @@
             <td colspan="6"></td>
         </tr>
         <tr>
-            <td colspan="6"><strong>DATA TRANSAKSI BULANAN</strong></td>
+            <td colspan="9"><strong>DATA TRANSAKSI BULANAN</strong></td>
         </tr>
         <tr>
             <td><strong>No</strong></td>
             <td><strong>No. Invoice</strong></td>
             <td><strong>Tanggal &amp; Waktu</strong></td>
             <td><strong>Kasir</strong></td>
+            <td><strong>Nama Pembeli</strong></td>
+            <td><strong>Status</strong></td>
             <td><strong>Metode Bayar</strong></td>
             <td><strong>Rincian Figura Terjual</strong></td>
             <td><strong>Total Pembayaran</strong></td>
@@ -94,6 +96,8 @@
                 <td>{{ $trx->invoice_number }}</td>
                 <td>{{ $trx->created_at->format('d/m/Y H:i') }}</td>
                 <td>{{ $trx->user?->name ?? '-' }}</td>
+                <td>{{ $trx->customer_name ?? 'Umum' }}</td>
+                <td>{{ $trx->customer_type_label }}</td>
                 <td>{{ $trx->payment_method_label }}</td>
                 <td>
                     @foreach ($trx->details as $detail)
@@ -104,7 +108,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="7">Tidak ada transaksi pada bulan ini.</td>
+                <td colspan="9">Tidak ada transaksi pada bulan ini.</td>
             </tr>
         @endforelse
     </tbody>

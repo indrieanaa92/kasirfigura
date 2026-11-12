@@ -21,8 +21,32 @@ class Product extends Model
         'name',
         'size',
         'price',
+        'price_sales',
+        'price_agen',
+        'price_umum',
         'stock',
     ];
+
+    /**
+     * Ensure tier prices and legacy base price stay synchronized on save.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Product $product): void {
+            if ($product->price_umum === null && $product->price !== null) {
+                $product->price_umum = $product->price;
+            }
+            if ($product->price_agen === null && $product->price !== null) {
+                $product->price_agen = $product->price;
+            }
+            if ($product->price_sales === null && $product->price !== null) {
+                $product->price_sales = $product->price;
+            }
+            if ($product->price_umum !== null) {
+                $product->price = $product->price_umum;
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -33,8 +57,23 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
+            'price_sales' => 'decimal:2',
+            'price_agen' => 'decimal:2',
+            'price_umum' => 'decimal:2',
             'stock' => 'integer',
         ];
+    }
+
+    /**
+     * Resolve unit price based on buyer status (sales, agen, or umum).
+     */
+    public function getPriceForCustomerType(string $customerType): float
+    {
+        return match ($customerType) {
+            Transaction::CUSTOMER_SALES => (float) ($this->price_sales ?? $this->price),
+            Transaction::CUSTOMER_AGEN => (float) ($this->price_agen ?? $this->price),
+            default => (float) ($this->price_umum ?? $this->price),
+        };
     }
 
     /**

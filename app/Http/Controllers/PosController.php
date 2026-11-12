@@ -23,9 +23,9 @@ class PosController extends Controller
     {
         $products = Product::available()
             ->orderBy('name')
-            ->get(['id', 'name', 'size', 'price', 'stock']);
+            ->get(['id', 'name', 'size', 'price', 'price_sales', 'price_agen', 'price_umum', 'stock']);
 
-        $recentTransactions = Transaction::with(['user:id,name', 'details.product:id,name,size,price'])
+        $recentTransactions = Transaction::with(['user:id,name', 'details.product:id,name,size,price,price_sales,price_agen,price_umum'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->take(5)
@@ -35,6 +35,7 @@ class PosController extends Controller
             'products' => $products,
             'recentTransactions' => $recentTransactions,
             'paymentMethods' => Transaction::PAYMENT_METHODS,
+            'customerTypes' => Transaction::CUSTOMER_TYPES,
         ]);
     }
 
@@ -44,12 +45,18 @@ class PosController extends Controller
     public function checkout(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
+            'customer_name' => ['required', 'string', 'max:100'],
+            'customer_type' => ['required', 'string', Rule::in(array_keys(Transaction::CUSTOMER_TYPES))],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'payment_method' => ['nullable', 'string', Rule::in(array_keys(Transaction::PAYMENT_METHODS))],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
         ], [
+            'customer_name.required' => 'Nama pembeli wajib diisi.',
+            'customer_name.max' => 'Nama pembeli maksimal 100 karakter.',
+            'customer_type.required' => 'Status pembeli (Sales, Agen, atau Umum) wajib dipilih.',
+            'customer_type.in' => 'Status pembeli harus Sales, Agen, atau Umum.',
             'items.required' => 'Keranjang belanja masih kosong.',
             'items.min' => 'Pilih minimal 1 figura sebelum checkout.',
             'items.*.quantity.min' => 'Jumlah pembelian minimal 1 unit.',
@@ -58,6 +65,8 @@ class PosController extends Controller
         ]);
 
         $paymentMethod = $validated['payment_method'] ?? Transaction::PAYMENT_CASH;
+        $customerType = $validated['customer_type'];
+        $customerName = trim((string) $validated['customer_name']);
 
         // Merge duplicate product_ids so stock validation checks aggregate requested quantity.
         $requestedQuantities = collect($validated['items'])
@@ -65,7 +74,7 @@ class PosController extends Controller
             ->map(fn ($entries) => (int) $entries->sum('quantity'))
             ->sortKeys();
 
-        $transaction = DB::transaction(function () use ($request, $requestedQuantities, $paymentMethod, $validated): Transaction {
+        $transaction = DB::transaction(function () use ($request, $requestedQuantities, $paymentMethod, $customerType, $customerName, $validated): Transaction {
             $products = Product::whereIn('id', $requestedQuantities->keys()->all())
                 ->orderBy('id')
                 ->lockForUpdate()
@@ -92,12 +101,14 @@ class PosController extends Controller
                     ]);
                 }
 
-                $subtotal = round((float) $product->price * $quantity, 2);
+                $unitPrice = $product->getPriceForCustomerType($customerType);
+                $subtotal = round($unitPrice * $quantity, 2);
                 $totalAmount = round($totalAmount + $subtotal, 2);
 
                 $lineItems[] = [
                     'product' => $product,
                     'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
                     'subtotal' => $subtotal,
                 ];
             }
@@ -122,6 +133,8 @@ class PosController extends Controller
             $transaction = Transaction::create([
                 'invoice_number' => $this->generateUniqueInvoiceNumber(),
                 'user_id' => $request->user()->id,
+                'customer_name' => $customerName,
+                'customer_type' => $customerType,
                 'total_amount' => $totalAmount,
                 'payment_method' => $paymentMethod,
                 'paid_amount' => $paidAmount,
@@ -133,19 +146,20 @@ class PosController extends Controller
                     'transaction_id' => $transaction->id,
                     'product_id' => $item['product']->id,
                     'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
                     'subtotal' => $item['subtotal'],
                 ]);
 
                 $item['product']->decrement('stock', $item['quantity']);
             }
 
-            return $transaction->load(['user:id,name', 'details.product:id,name,size,price']);
+            return $transaction->load(['user:id,name', 'details.product:id,name,size,price,price_sales,price_agen,price_umum']);
         });
 
         if ($request->expectsJson()) {
             $availableProducts = Product::available()
                 ->orderBy('name')
-                ->get(['id', 'name', 'size', 'price', 'stock']);
+                ->get(['id', 'name', 'size', 'price', 'price_sales', 'price_agen', 'price_umum', 'stock']);
 
             return response()->json([
                 'message' => 'Transaksi berhasil disimpan.',

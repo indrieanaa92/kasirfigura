@@ -65,11 +65,22 @@
                         @endif
                     </div>
 
-                    <div class="flex items-center justify-between pt-2 border-t border-stone-100">
-                        <span class="text-base font-extrabold text-amber-700">
-                            Rp {{ number_format($product->price, 0, ',', '.') }}
-                        </span>
-                        <div class="flex items-center gap-2">
+                    <div class="grid grid-cols-3 gap-2 rounded-xl bg-stone-50 border border-stone-200/70 p-2.5 text-center text-[11px]">
+                        <div>
+                            <p class="text-stone-500 font-medium">Sales</p>
+                            <p class="font-bold text-stone-800">Rp {{ number_format($product->price_sales ?: $product->price, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="border-x border-stone-200 px-1">
+                            <p class="text-stone-500 font-medium">Agen</p>
+                            <p class="font-bold text-stone-800">Rp {{ number_format($product->price_agen ?: $product->price, 0, ',', '.') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-stone-500 font-medium">Umum</p>
+                            <p class="font-bold text-amber-700">Rp {{ number_format($product->price_umum ?: $product->price, 0, ',', '.') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-stone-100">
                             <button type="button"
                                     @click="openEditById({{ $product->id }})"
                                     class="min-h-[40px] rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200/70 px-4 py-2 text-xs font-semibold text-amber-800 transition cursor-pointer">
@@ -104,7 +115,7 @@
                         <tr>
                             <th class="px-6 py-3.5">Nama Figura</th>
                             <th class="px-6 py-3.5">Ukuran</th>
-                            <th class="px-6 py-3.5">Harga</th>
+                            <th class="px-6 py-3.5">Harga (Sales / Agen / Umum)</th>
                             <th class="px-6 py-3.5">Stok</th>
                             <th class="px-6 py-3.5 text-right">Aksi</th>
                         </tr>
@@ -118,8 +129,10 @@
                                         {{ $product->size }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 font-bold text-stone-800">
-                                    Rp {{ number_format($product->price, 0, ',', '.') }}
+                                <td class="px-6 py-4 text-xs space-y-0.5">
+                                    <div><span class="text-stone-500">Sales:</span> <span class="font-bold text-stone-800">Rp {{ number_format($product->price_sales ?: $product->price, 0, ',', '.') }}</span></div>
+                                    <div><span class="text-stone-500">Agen:</span> <span class="font-bold text-stone-800">Rp {{ number_format($product->price_agen ?: $product->price, 0, ',', '.') }}</span></div>
+                                    <div><span class="text-stone-500">Umum:</span> <span class="font-bold text-amber-700">Rp {{ number_format($product->price_umum ?: $product->price, 0, ',', '.') }}</span></div>
                                 </td>
                                 <td class="px-6 py-4">
                                     @if ($product->stock === 0)
@@ -206,27 +219,49 @@
                                class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-stone-700 mb-1">Harga (Rp)</label>
+                            <label class="block text-xs font-semibold text-stone-700 mb-1">Harga Sales (Rp)</label>
                             <input type="number"
-                                   name="price"
+                                   name="price_sales"
                                    min="0"
                                    step="500"
-                                   x-model="form.price"
+                                   x-model="form.price_sales"
                                    required
                                    class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-stone-700 mb-1">Stok</label>
+                            <label class="block text-xs font-semibold text-stone-700 mb-1">Harga Agen (Rp)</label>
                             <input type="number"
-                                   name="stock"
+                                   name="price_agen"
                                    min="0"
-                                   x-model="form.stock"
+                                   step="500"
+                                   x-model="form.price_agen"
                                    required
                                    class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
                         </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-700 mb-1">Harga Umum (Rp)</label>
+                            <input type="number"
+                                   name="price_umum"
+                                   min="0"
+                                   step="500"
+                                   x-model="form.price_umum"
+                                   required
+                                   class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-700 mb-1">Stok</label>
+                        <input type="number"
+                               name="stock"
+                               min="0"
+                               x-model="form.stock"
+                               required
+                               class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
                     </div>
 
                     <div class="pt-2 flex justify-end gap-2">
@@ -256,14 +291,16 @@
             form: {
                 name: '',
                 size: '',
-                price: '',
+                price_sales: '',
+                price_agen: '',
+                price_umum: '',
                 stock: '',
             },
 
             openCreate() {
                 this.isEditing = false;
                 this.formAction = '{{ route("admin.products.store") }}';
-                this.form = { name: '', size: '', price: '', stock: 10 };
+                this.form = { name: '', size: '', price_sales: '', price_agen: '', price_umum: '', stock: 10 };
                 this.modalOpen = true;
             },
 
@@ -276,7 +313,9 @@
                 this.form = {
                     name: product.name,
                     size: product.size,
-                    price: Math.round(Number(product.price)),
+                    price_sales: Math.round(Number(product.price_sales ?? product.price)),
+                    price_agen: Math.round(Number(product.price_agen ?? product.price)),
+                    price_umum: Math.round(Number(product.price_umum ?? product.price)),
                     stock: product.stock,
                 };
                 this.modalOpen = true;

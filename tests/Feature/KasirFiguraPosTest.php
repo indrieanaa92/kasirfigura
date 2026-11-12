@@ -71,12 +71,18 @@ class KasirFiguraPosTest extends TestCase
             'name' => 'Figura Jati Test',
             'size' => '8R',
             'price' => 50000,
+            'price_sales' => 40000,
+            'price_agen' => 45000,
+            'price_umum' => 50000,
             'stock' => 5,
         ]);
         $outOfStock = Product::create([
             'name' => 'Figura Kosong Test',
             'size' => '4R',
             'price' => 30000,
+            'price_sales' => 24000,
+            'price_agen' => 27000,
+            'price_umum' => 30000,
             'stock' => 0,
         ]);
 
@@ -84,11 +90,27 @@ class KasirFiguraPosTest extends TestCase
             ->get(route('pos.index'))
             ->assertOk()
             ->assertSee($available->name)
-            ->assertDontSee($outOfStock->name);
+            ->assertDontSee($outOfStock->name)
+            ->assertDontSee('Rp 50.000');
+
+        // Missing customer_name / customer_type fails validation
+        $this->actingAs($kasir)
+            ->postJson(route('pos.checkout'), [
+                'payment_method' => Transaction::PAYMENT_CASH,
+                'paid_amount' => 100000,
+                'items' => [
+                    ['product_id' => $available->id, 'quantity' => 1],
+                ],
+            ])
+            ->assertStatus(422);
 
         // Insufficient stock fails without creating transaction
         $this->actingAs($kasir)
             ->postJson(route('pos.checkout'), [
+                'customer_name' => 'Budi Santoso',
+                'customer_type' => Transaction::CUSTOMER_SALES,
+                'payment_method' => Transaction::PAYMENT_CASH,
+                'paid_amount' => 300000,
                 'items' => [
                     ['product_id' => $available->id, 'quantity' => 6],
                 ],
@@ -98,24 +120,32 @@ class KasirFiguraPosTest extends TestCase
         $this->assertDatabaseCount('transactions', 0);
         $this->assertSame(5, $available->fresh()->stock);
 
-        // Valid cash checkout with overpayment creates transaction + change and decrements stock
+        // Valid cash checkout as Sales uses price_sales (40.000 x 2 = 80.000), creates change, and decrements stock
         $this->actingAs($kasir)
             ->postJson(route('pos.checkout'), [
+                'customer_name' => 'Budi Santoso',
+                'customer_type' => Transaction::CUSTOMER_SALES,
                 'payment_method' => Transaction::PAYMENT_CASH,
-                'paid_amount' => 150000,
+                'paid_amount' => 100000,
                 'items' => [
                     ['product_id' => $available->id, 'quantity' => 2],
                 ],
             ])
             ->assertCreated()
-            ->assertJsonPath('transaction.total_amount', '100000.00')
-            ->assertJsonPath('transaction.paid_amount', '150000.00')
-            ->assertJsonPath('transaction.change_amount', '50000.00')
-            ->assertJsonPath('transaction.payment_method', 'cash');
+            ->assertJsonPath('transaction.customer_name', 'Budi Santoso')
+            ->assertJsonPath('transaction.customer_type', Transaction::CUSTOMER_SALES)
+            ->assertJsonPath('transaction.customer_type_label', 'Sales')
+            ->assertJsonPath('transaction.total_amount', '80000.00')
+            ->assertJsonPath('transaction.paid_amount', '100000.00')
+            ->assertJsonPath('transaction.change_amount', '20000.00')
+            ->assertJsonPath('transaction.payment_method', 'cash')
+            ->assertJsonPath('transaction.details.0.unit_price', '40000.00');
 
         // Cash checkout with insufficient tendered amount fails
         $this->actingAs($kasir)
             ->postJson(route('pos.checkout'), [
+                'customer_name' => 'Ani Agen',
+                'customer_type' => Transaction::CUSTOMER_AGEN,
                 'payment_method' => Transaction::PAYMENT_CASH,
                 'paid_amount' => 20000,
                 'items' => [
@@ -134,29 +164,38 @@ class KasirFiguraPosTest extends TestCase
         $admin = User::factory()->admin()->create();
         $kasir = User::factory()->kasir()->create();
 
-        // Create product
+        // Create product with tiered prices
         $this->actingAs($admin)
             ->post(route('admin.products.store'), [
                 'name' => 'Figura Klasik Emas',
                 'size' => '10R',
-                'price' => 120000,
+                'price_sales' => 95000,
+                'price_agen' => 108000,
+                'price_umum' => 120000,
                 'stock' => 15,
             ])
             ->assertRedirect(route('admin.products.index'));
 
         $product = Product::where('name', 'Figura Klasik Emas')->firstOrFail();
 
-        // Update product
+        // Update product with tiered prices
         $this->actingAs($admin)
             ->put(route('admin.products.update', $product), [
                 'name' => 'Figura Klasik Emas Revisi',
                 'size' => '12R',
-                'price' => 135000,
+                'price_sales' => 105000,
+                'price_agen' => 120000,
+                'price_umum' => 135000,
                 'stock' => 12,
             ])
             ->assertRedirect(route('admin.products.index'));
 
-        $this->assertSame('12R', $product->fresh()->size);
+        $freshProduct = $product->fresh();
+        $this->assertSame('12R', $freshProduct->size);
+        $this->assertEquals(105000, (float) $freshProduct->price_sales);
+        $this->assertEquals(120000, (float) $freshProduct->price_agen);
+        $this->assertEquals(135000, (float) $freshProduct->price_umum);
+        $this->assertEquals(135000, (float) $freshProduct->price);
 
         // Create current-month and previous-month transactions
         $currentTrx = Transaction::create([

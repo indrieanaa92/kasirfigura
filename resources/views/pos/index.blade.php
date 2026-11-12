@@ -62,7 +62,7 @@
     }
 </style>
 
-<div x-data="posApp(@js($products), @js($recentTransactions), @js($paymentMethods))" class="min-h-screen flex flex-col bg-stone-50">
+<div x-data="posApp(@js($products), @js($recentTransactions), @js($paymentMethods), @js($customerTypes))" class="min-h-screen flex flex-col bg-stone-50">
     {{-- Top Gallery Walnut-Gold Header --}}
     <header class="bg-gradient-to-r from-stone-950 via-stone-900 to-amber-900 text-white shadow-lg shadow-stone-900/15 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
@@ -135,7 +135,6 @@
                             </div>
 
                             <h3 class="mt-3 text-base font-bold text-stone-900 leading-snug" x-text="product.name"></h3>
-                            <p class="mt-2 text-lg font-extrabold text-amber-700" x-text="formatRupiah(product.price)"></p>
                         </div>
 
                         <button type="button"
@@ -163,12 +162,17 @@
                     <template x-for="trx in recentTransactions" :key="trx.id">
                         <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-stone-50 px-3.5 py-2.5 border border-stone-200/70 text-xs">
                             <div>
-                                <div class="flex items-center gap-2">
+                                <div class="flex flex-wrap items-center gap-1.5">
                                     <p class="font-bold text-stone-800" x-text="trx.invoice_number"></p>
                                     <span class="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800"
                                           x-text="trx.payment_method_label || formatPaymentLabel(trx.payment_method)"></span>
+                                    <span class="rounded-md bg-stone-200/80 px-2 py-0.5 text-[11px] font-semibold text-stone-700"
+                                          x-text="trx.customer_type_label || formatCustomerLabel(trx.customer_type)"></span>
                                 </div>
-                                <p class="text-stone-500 mt-0.5" x-text="formatDate(trx.created_at)"></p>
+                                <p class="text-stone-600 font-medium mt-0.5">
+                                    Pembeli: <span x-text="trx.customer_name || '-'"></span>
+                                    &bull; <span class="text-stone-500 font-normal" x-text="formatDate(trx.created_at)"></span>
+                                </p>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="font-bold text-amber-700" x-text="formatRupiah(trx.total_amount)"></span>
@@ -216,6 +220,38 @@
                     <p class="text-xs text-stone-400">Klik tombol tambah pada daftar figura di sebelah kiri.</p>
                 </div>
 
+                {{-- Buyer Name & Tier Selection (Shown when items are in cart) --}}
+                <div x-show="cart.length > 0" class="rounded-xl border border-amber-200/80 bg-amber-50/50 p-3.5 space-y-3">
+                    <div>
+                        <label for="customer-name" class="block text-xs font-semibold text-stone-700 mb-1.5">Nama Pembeli</label>
+                        <input id="customer-name"
+                               type="text"
+                               x-model="customerName"
+                               maxlength="100"
+                               placeholder="Masukkan nama pembeli..."
+                               class="w-full min-h-[42px] rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-sm text-stone-900 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/20">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-700 mb-1.5">Status Pembeli (Penentu Harga)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <template x-for="(label, key) in customerTypes" :key="key">
+                                <button type="button"
+                                        @click="selectCustomerType(key)"
+                                        :class="customerType === key
+                                            ? 'border-amber-600 bg-gradient-to-r from-amber-700 to-orange-600 text-white shadow-sm'
+                                            : 'border-stone-200 bg-white text-stone-700 hover:bg-amber-50 hover:border-amber-300'"
+                                        class="min-h-[44px] rounded-xl border px-2 py-2 text-xs font-bold transition text-center cursor-pointer"
+                                        x-text="label"></button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <p x-show="!customerType" class="text-[11px] font-medium text-amber-800">
+                        Pilih status pembeli (Sales, Agen, atau Umum) untuk menampilkan harga produk.
+                    </p>
+                </div>
+
                 {{-- Cart Items List --}}
                 <div x-show="cart.length > 0" class="max-h-72 overflow-y-auto divide-y divide-stone-100 pr-1">
                     <template x-for="item in cart" :key="item.product_id">
@@ -223,7 +259,13 @@
                             <div class="min-w-0 flex-1">
                                 <p class="text-sm font-bold text-stone-800 truncate" x-text="item.name"></p>
                                 <p class="text-xs text-stone-500">
-                                    <span x-text="item.size"></span> &bull; <span x-text="formatRupiah(item.price)"></span>
+                                    <span x-text="item.size"></span>
+                                    <template x-if="customerType">
+                                        <span> &bull; <span class="font-semibold text-stone-700" x-text="formatRupiah(getItemUnitPrice(item))"></span></span>
+                                    </template>
+                                    <template x-if="!customerType">
+                                        <span class="italic text-stone-400"> &bull; Pilih status untuk harga</span>
+                                    </template>
                                 </p>
                                 <div class="mt-2 inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-1.5 py-1">
                                     <button type="button"
@@ -238,7 +280,8 @@
                             </div>
 
                             <div class="text-right">
-                                <p class="text-sm font-bold text-amber-700" x-text="formatRupiah(item.price * item.quantity)"></p>
+                                <p x-show="customerType" class="text-sm font-bold text-amber-700" x-text="formatRupiah(getItemSubtotal(item))"></p>
+                                <p x-show="!customerType" class="text-xs font-medium text-stone-400">-</p>
                                 <button type="button"
                                         @click="removeItem(item.product_id)"
                                         class="mt-2 min-h-[36px] px-1 text-xs text-rose-500 hover:text-rose-700 font-medium cursor-pointer">
@@ -249,10 +292,15 @@
                     </template>
                 </div>
 
-                {{-- Total, Payment Method & Change Section --}}
-                <div x-show="cart.length > 0" class="pt-3 border-t border-stone-200 space-y-4">
+                {{-- Total, Payment Method & Change Section (Shown once customer status is selected) --}}
+                <div x-show="cart.length > 0 && customerType !== ''" class="pt-3 border-t border-stone-200 space-y-4">
                     <div class="flex items-center justify-between">
-                        <span class="text-sm font-semibold text-stone-600">Total Tagihan</span>
+                        <div>
+                            <span class="text-sm font-semibold text-stone-600">Total Tagihan</span>
+                            <p class="text-[11px] font-medium text-amber-700">
+                                Harga <span x-text="formatCustomerLabel(customerType)"></span>
+                            </p>
+                        </div>
                         <span class="text-xl font-extrabold text-amber-700" x-text="formatRupiah(grandTotal)"></span>
                     </div>
 
@@ -330,6 +378,9 @@
                         <span x-show="!isSubmitting">Checkout &amp; Simpan Transaksi</span>
                         <span x-show="isSubmitting">Memproses Transaksi...</span>
                     </button>
+                    <p x-show="customerType && !customerName.trim()" class="text-[11px] font-medium text-rose-600 text-center">
+                        Isi Nama Pembeli di atas terlebih dahulu untuk checkout.
+                    </p>
                 </div>
             </div>
         </aside>
@@ -350,9 +401,10 @@
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
             <div class="min-w-0">
                 <p class="text-[11px] font-medium text-stone-500">
-                    <span x-text="totalItems"></span> item di keranjang
+                    <span x-text="totalItems"></span> item<span x-show="customerType" x-text="' • ' + formatCustomerLabel(customerType)"></span>
                 </p>
-                <p class="text-base font-extrabold text-amber-700 truncate" x-text="formatRupiah(grandTotal)"></p>
+                <p x-show="customerType" class="text-base font-extrabold text-amber-700 truncate" x-text="formatRupiah(grandTotal)"></p>
+                <p x-show="!customerType" class="text-xs font-bold text-amber-700 truncate">Pilih status pembeli di keranjang</p>
             </div>
             <button type="button"
                     @click="scrollToCart()"
@@ -415,6 +467,14 @@
                         <span class="font-bold text-stone-900 text-right" x-text="lastReceipt?.user?.name || '{{ auth()->user()->name }}'"></span>
                     </div>
                     <div class="flex justify-between gap-2">
+                        <span class="text-stone-500 shrink-0">Pembeli</span>
+                        <span class="font-bold text-stone-900 text-right break-words" x-text="lastReceipt?.customer_name || '-'"></span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-stone-500 shrink-0">Status</span>
+                        <span class="font-bold text-stone-900 text-right" x-text="lastReceipt?.customer_type_label || formatCustomerLabel(lastReceipt?.customer_type)"></span>
+                    </div>
+                    <div class="flex justify-between gap-2">
                         <span class="text-stone-500 shrink-0">Pembayaran</span>
                         <span class="font-bold text-stone-900 text-right" x-text="lastReceipt?.payment_method_label || formatPaymentLabel(lastReceipt?.payment_method)"></span>
                     </div>
@@ -431,7 +491,7 @@
                             <div class="flex justify-between gap-2 text-stone-700 pl-2">
                                 <span>
                                     <span x-text="detail.quantity"></span> &times;
-                                    <span x-text="formatRupiah(detail.product?.price ?? (detail.subtotal / Math.max(1, detail.quantity)))"></span>
+                                    <span x-text="formatRupiah(Number(detail.unit_price) > 0 ? detail.unit_price : (detail.subtotal / Math.max(1, detail.quantity)))"></span>
                                 </span>
                                 <span class="font-bold text-stone-900 whitespace-nowrap" x-text="formatRupiah(detail.subtotal)"></span>
                             </div>
@@ -480,14 +540,17 @@
 </div>
 
 <script>
-    function posApp(initialProducts, initialRecentTransactions, paymentMethods) {
+    function posApp(initialProducts, initialRecentTransactions, paymentMethods, customerTypes) {
         return {
             products: initialProducts || [],
             recentTransactions: initialRecentTransactions || [],
             paymentMethods: paymentMethods || { cash: 'Cash (Tunai)' },
+            customerTypes: customerTypes || { sales: 'Sales', agen: 'Agen', umum: 'Umum' },
             cart: [],
             search: '',
             selectedSize: '',
+            customerName: '',
+            customerType: '',
             paymentMethod: 'cash',
             cashReceived: null,
             isSubmitting: false,
@@ -517,15 +580,43 @@
             },
 
             get grandTotal() {
-                return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                if (!this.customerType) return 0;
+                return this.cart.reduce((sum, item) => sum + this.getItemSubtotal(item), 0);
             },
 
             get canCheckout() {
                 if (this.cart.length === 0) return false;
+                if (!this.customerType) return false;
+                if (!this.customerName.trim()) return false;
                 if (this.paymentMethod === 'cash') {
                     return Number(this.cashReceived) >= this.grandTotal;
                 }
                 return true;
+            },
+
+            getItemUnitPrice(item) {
+                if (this.customerType === 'sales') {
+                    return Number(item.price_sales ?? item.price ?? 0);
+                }
+                if (this.customerType === 'agen') {
+                    return Number(item.price_agen ?? item.price ?? 0);
+                }
+                if (this.customerType === 'umum') {
+                    return Number(item.price_umum ?? item.price ?? 0);
+                }
+                return 0;
+            },
+
+            getItemSubtotal(item) {
+                return this.getItemUnitPrice(item) * item.quantity;
+            },
+
+            selectCustomerType(type) {
+                this.customerType = type;
+                this.errorMessage = '';
+                if (this.paymentMethod !== 'cash') {
+                    this.cashReceived = this.grandTotal;
+                }
             },
 
             selectPaymentMethod(method) {
@@ -566,6 +657,9 @@
                 if (existing) {
                     if (existing.quantity < product.stock) {
                         existing.quantity++;
+                        if (this.paymentMethod !== 'cash' && this.customerType) {
+                            this.cashReceived = this.grandTotal;
+                        }
                         this.showCartNotice(`${product.name} (${existing.quantity}x) di keranjang`);
                     }
                     return;
@@ -576,9 +670,15 @@
                     name: product.name,
                     size: product.size,
                     price: Number(product.price),
+                    price_sales: Number(product.price_sales ?? product.price),
+                    price_agen: Number(product.price_agen ?? product.price),
+                    price_umum: Number(product.price_umum ?? product.price),
                     max_stock: Number(product.stock),
                     quantity: 1,
                 });
+                if (this.paymentMethod !== 'cash' && this.customerType) {
+                    this.cashReceived = this.grandTotal;
+                }
                 this.showCartNotice(`${product.name} ditambahkan ke keranjang`);
             },
 
@@ -605,6 +705,8 @@
 
             clearCart() {
                 this.cart = [];
+                this.customerName = '';
+                this.customerType = '';
                 this.paymentMethod = 'cash';
                 this.cashReceived = null;
                 this.errorMessage = '';
@@ -620,6 +722,16 @@
 
             async submitCheckout() {
                 if (this.cart.length === 0 || this.isSubmitting) return;
+
+                if (!this.customerName.trim()) {
+                    this.errorMessage = 'Nama pembeli wajib diisi sebelum checkout.';
+                    return;
+                }
+
+                if (!this.customerType) {
+                    this.errorMessage = 'Pilih status pembeli (Sales, Agen, atau Umum) terlebih dahulu.';
+                    return;
+                }
 
                 if (this.paymentMethod === 'cash' && Number(this.cashReceived) < this.grandTotal) {
                     this.errorMessage = 'Nominal uang tunai yang diterima kurang dari total tagihan.';
@@ -639,6 +751,8 @@
                             'X-CSRF-TOKEN': csrfToken,
                         },
                         body: JSON.stringify({
+                            customer_name: this.customerName.trim(),
+                            customer_type: this.customerType,
                             payment_method: this.paymentMethod,
                             paid_amount: this.paymentMethod === 'cash' ? Number(this.cashReceived) : this.grandTotal,
                             items: this.cart.map(item => ({
@@ -652,6 +766,8 @@
 
                     if (!response.ok) {
                         const firstError =
+                            payload?.errors?.customer_name?.[0] ||
+                            payload?.errors?.customer_type?.[0] ||
                             payload?.errors?.paid_amount?.[0] ||
                             payload?.errors?.payment_method?.[0] ||
                             payload?.errors?.items?.[0] ||
@@ -671,6 +787,10 @@
                 } finally {
                     this.isSubmitting = false;
                 }
+            },
+
+            formatCustomerLabel(key) {
+                return this.customerTypes[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) : 'Umum');
             },
 
             formatPaymentLabel(key) {

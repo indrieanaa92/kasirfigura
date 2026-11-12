@@ -117,7 +117,7 @@ class SimpleXlsxExporter
 
         $rows[] = ['style' => 0, 'cells' => []];
         $rows[] = ['style' => 1, 'cells' => ['DATA TRANSAKSI BULANAN']];
-        $rows[] = ['style' => 2, 'cells' => ['No', 'No. Invoice', 'Tanggal & Waktu', 'Kasir', 'Metode Bayar', 'Rincian Figura Terjual', 'Total Pembayaran']];
+        $rows[] = ['style' => 2, 'cells' => ['No', 'No. Invoice', 'Tanggal & Waktu', 'Kasir', 'Nama Pembeli', 'Status', 'Metode Bayar', 'Rincian Figura Terjual', 'Total Pembayaran']];
 
         if (count($report['transactions']) > 0) {
             foreach ($report['transactions'] as $index => $trx) {
@@ -134,6 +134,8 @@ class SimpleXlsxExporter
                         (string) $trx->invoice_number,
                         $trx->created_at->format('d/m/Y H:i'),
                         (string) ($trx->user?->name ?? '-'),
+                        (string) ($trx->customer_name ?? 'Umum'),
+                        (string) $trx->customer_type_label,
                         (string) $trx->payment_method_label,
                         $itemsText !== '' ? $itemsText : '-',
                         $this->formatRupiah($trx->total_amount),

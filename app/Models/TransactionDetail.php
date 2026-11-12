@@ -19,6 +19,7 @@ class TransactionDetail extends Model
         'transaction_id',
         'product_id',
         'quantity',
+        'unit_price',
         'subtotal',
     ];
 
@@ -31,6 +32,7 @@ class TransactionDetail extends Model
     {
         return [
             'quantity' => 'integer',
+            'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
         ];
     }

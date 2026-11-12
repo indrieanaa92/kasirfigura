@@ -23,6 +23,16 @@ class Transaction extends Model
         self::PAYMENT_DEBIT => 'Kartu Debit / EDC',
     ];
 
+    public const CUSTOMER_SALES = 'sales';
+    public const CUSTOMER_AGEN = 'agen';
+    public const CUSTOMER_UMUM = 'umum';
+
+    public const CUSTOMER_TYPES = [
+        self::CUSTOMER_SALES => 'Sales',
+        self::CUSTOMER_AGEN => 'Agen',
+        self::CUSTOMER_UMUM => 'Umum',
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -31,6 +41,8 @@ class Transaction extends Model
     protected $fillable = [
         'invoice_number',
         'user_id',
+        'customer_name',
+        'customer_type',
         'total_amount',
         'payment_method',
         'paid_amount',
@@ -44,6 +56,7 @@ class Transaction extends Model
      */
     protected $appends = [
         'payment_method_label',
+        'customer_type_label',
     ];
 
     /**
@@ -66,6 +79,16 @@ class Transaction extends Model
     public function getPaymentMethodLabelAttribute(): string
     {
         return self::PAYMENT_METHODS[$this->payment_method] ?? ucfirst((string) $this->payment_method);
+    }
+
+    /**
+     * Human-readable label for the buyer tier/status.
+     */
+    public function getCustomerTypeLabelAttribute(): string
+    {
+        $type = $this->customer_type ?: self::CUSTOMER_UMUM;
+
+        return self::CUSTOMER_TYPES[$type] ?? ucfirst((string) $type);
     }
 
     /**

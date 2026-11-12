@@ -135,6 +135,7 @@
                                 <th class="px-5 py-3">Invoice</th>
                                 <th class="px-5 py-3">Tanggal</th>
                                 <th class="px-5 py-3">Kasir</th>
+                                <th class="px-5 py-3">Pembeli</th>
                                 <th class="px-5 py-3">Metode</th>
                                 <th class="px-5 py-3">Item</th>
                                 <th class="px-5 py-3 text-right">Total</th>
@@ -152,6 +153,12 @@
                                     <td class="px-5 py-3.5 text-xs font-medium text-stone-700">
                                         {{ $trx->user?->name ?? '-' }}
                                     </td>
+                                    <td class="px-5 py-3.5 text-xs">
+                                        <div class="font-semibold text-stone-800">{{ $trx->customer_name ?? 'Umum' }}</div>
+                                        <span class="mt-0.5 inline-flex rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-stone-700">
+                                            {{ $trx->customer_type_label }}
+                                        </span>
+                                    </td>
                                     <td class="px-5 py-3.5 text-xs whitespace-nowrap">
                                         <span class="inline-flex rounded-lg bg-amber-50 border border-amber-200/70 px-2 py-0.5 font-semibold text-amber-800">
                                             {{ $trx->payment_method_label }}
@@ -168,7 +175,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-5 py-10 text-center text-sm text-stone-500">
+                                    <td colspan="7" class="px-5 py-10 text-center text-sm text-stone-500">
                                         Belum ada data transaksi pada bulan {{ $monthLabel }}.
                                     </td>
                                 </tr>
