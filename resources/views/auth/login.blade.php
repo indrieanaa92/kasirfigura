@@ -31,7 +31,7 @@
 
         {{-- Login Form Panel (Appears first on mobile so immediately usable) --}}
         <div class="order-1 md:order-2 p-6 sm:p-8 lg:p-10 flex flex-col justify-center bg-white"
-             x-data="{ role: '{{ $activeRole }}' }">
+             x-data="{ role: '{{ $activeRole }}', submitting: false }">
             <div class="mb-5 sm:mb-6">
                 <h2 class="text-2xl font-bold text-stone-900">Selamat Datang</h2>
                 <p class="mt-1 text-sm text-stone-500">Pilih portal login sesuai peran Anda.</p>
@@ -57,7 +57,7 @@
                 </button>
             </div>
 
-            <form method="POST" action="{{ route('login.attempt') }}" class="space-y-4">
+            <form method="POST" action="{{ route('login.attempt') }}" @submit="submitting = true" class="space-y-4">
                 @csrf
                 <input type="hidden" name="login_as" :value="role">
 
@@ -92,8 +92,10 @@
                 </div>
 
                 <button type="submit"
-                        class="w-full min-h-[46px] rounded-xl bg-gradient-to-r from-amber-700 via-amber-600 to-orange-600 hover:from-amber-800 hover:via-amber-700 hover:to-orange-700 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-amber-700/25 transition cursor-pointer">
-                    <span x-text="role === 'admin' ? 'Masuk ke Dashboard Admin' : 'Masuk ke Kasir POS'"></span>
+                        :disabled="submitting"
+                        class="w-full min-h-[46px] rounded-xl bg-gradient-to-r from-amber-700 via-amber-600 to-orange-600 hover:from-amber-800 hover:via-amber-700 hover:to-orange-700 disabled:opacity-60 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-amber-700/25 transition cursor-pointer disabled:cursor-not-allowed">
+                    <span x-show="!submitting" x-text="role === 'admin' ? 'Masuk ke Dashboard Admin' : 'Masuk ke Kasir POS'"></span>
+                    <span x-show="submitting" x-cloak>Memproses Login...</span>
                 </button>
             </form>
         </div>

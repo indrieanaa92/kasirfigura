@@ -6,14 +6,14 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
     /**
      * Display the role-separated login page.
      */
-    public function showLogin(Request $request, ?string $role = null): View|RedirectResponse
+    public function showLogin(Request $request, ?string $role = null): Response
     {
         if (Auth::check()) {
             return $this->redirectByRole($request->user());
@@ -23,9 +23,13 @@ class AuthController extends Controller
             ? $role
             : old('login_as', User::ROLE_KASIR);
 
-        return view('auth.login', [
-            'activeRole' => $activeRole,
-        ]);
+        return response()
+            ->view('auth.login', [
+                'activeRole' => $activeRole,
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
 
     /**
