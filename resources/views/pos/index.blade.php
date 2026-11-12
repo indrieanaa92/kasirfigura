@@ -64,7 +64,7 @@
 
 <div x-data="posApp(@js($products), @js($recentTransactions), @js($paymentMethods), @js($customerTypes))" class="min-h-screen flex flex-col bg-stone-50">
     {{-- Top Gallery Walnut-Gold Header --}}
-    <header class="bg-gradient-to-r from-stone-950 via-stone-900 to-amber-900 text-white shadow-lg shadow-stone-900/15 no-print">
+    <header class="sticky top-0 z-30 bg-gradient-to-r from-stone-950 via-stone-900 to-amber-900 text-white shadow-lg shadow-stone-900/15 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md ring-1 ring-amber-300/30">
@@ -189,7 +189,7 @@
         </section>
 
         {{-- Right Column: Shopping Cart, Payment Method & Checkout --}}
-        <aside id="pos-cart" class="lg:col-span-4 lg:sticky lg:top-6 scroll-mt-4 rounded-2xl bg-white border border-stone-200 shadow-lg shadow-stone-900/5 overflow-hidden">
+        <aside id="pos-cart" class="lg:col-span-4 lg:sticky lg:top-24 scroll-mt-24 rounded-2xl bg-white border border-stone-200 shadow-lg shadow-stone-900/5 overflow-hidden">
             <div class="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900 px-5 py-4 text-white flex items-center justify-between">
                 <div>
                     <h2 class="text-base font-bold">Keranjang Belanja</h2>
