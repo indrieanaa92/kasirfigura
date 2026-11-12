@@ -24,6 +24,23 @@ foreach ($directories as $directory) {
 }
 
 $envOverrides = [
+    'APP_NAME' => 'Kasir Figura POS',
+    'APP_ENV' => 'production',
+    'APP_DEBUG' => 'false',
+    'APP_LOCALE' => 'id',
+    'APP_FALLBACK_LOCALE' => 'id',
+    'LOG_CHANNEL' => 'stderr',
+    'SESSION_DRIVER' => 'database',
+    'SESSION_LIFETIME' => '720',
+    'SESSION_ENCRYPT' => 'false',
+    'SESSION_SECURE_COOKIE' => 'true',
+    'SESSION_HTTP_ONLY' => 'true',
+    'SESSION_SAME_SITE' => 'lax',
+    'CACHE_STORE' => 'array',
+    'QUEUE_CONNECTION' => 'sync',
+    'DB_CONNECTION' => 'pgsql',
+    'DB_SSLMODE' => 'require',
+    'DB_EMULATE_PREPARES' => 'true',
     'VIEW_COMPILED_PATH' => $tmpStorage . '/framework/views',
     'APP_SERVICES_CACHE' => $tmpStorage . '/bootstrap/services.php',
     'APP_PACKAGES_CACHE' => $tmpStorage . '/bootstrap/packages.php',
@@ -33,7 +50,8 @@ $envOverrides = [
 ];
 
 foreach ($envOverrides as $key => $value) {
-    if (empty($_ENV[$key]) && empty($_SERVER[$key])) {
+    $current = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+    if ($current === false || $current === '') {
         $_ENV[$key] = $value;
         $_SERVER[$key] = $value;
         putenv("{$key}={$value}");

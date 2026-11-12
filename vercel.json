@@ -1,7 +1,6 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "version": 2,
-    "framework": null,
     "buildCommand": "npm run build",
     "outputDirectory": "public",
     "functions": {
@@ -26,31 +25,6 @@
             "src": "/(.*)",
             "dest": "/api/index.php"
         }
-    ],
-    "env": {
-        "APP_NAME": "Kasir Figura POS",
-        "APP_ENV": "production",
-        "APP_DEBUG": "false",
-        "APP_LOCALE": "id",
-        "APP_FALLBACK_LOCALE": "id",
-        "LOG_CHANNEL": "stderr",
-        "SESSION_DRIVER": "database",
-        "SESSION_LIFETIME": "720",
-        "SESSION_ENCRYPT": "false",
-        "SESSION_SECURE_COOKIE": "true",
-        "SESSION_HTTP_ONLY": "true",
-        "SESSION_SAME_SITE": "lax",
-        "CACHE_STORE": "array",
-        "QUEUE_CONNECTION": "sync",
-        "VIEW_COMPILED_PATH": "/tmp/storage/framework/views",
-        "APP_SERVICES_CACHE": "/tmp/storage/bootstrap/services.php",
-        "APP_PACKAGES_CACHE": "/tmp/storage/bootstrap/packages.php",
-        "APP_CONFIG_CACHE": "/tmp/storage/bootstrap/config.php",
-        "APP_ROUTES_CACHE": "/tmp/storage/bootstrap/routes.php",
-        "APP_EVENTS_CACHE": "/tmp/storage/bootstrap/events.php",
-        "DB_CONNECTION": "pgsql",
-        "DB_SSLMODE": "require",
-        "DB_EMULATE_PREPARES": "true"
-    }
+    ]
 }
 
