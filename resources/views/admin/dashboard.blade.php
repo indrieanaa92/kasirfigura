@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Admin - Inul Wijaya Frame')
+@section('title', 'Dashboard Admin - Inul Wijaya Pigura')
 
 @section('content')
 <div x-data="{ sidebarOpen: false }" class="min-h-screen flex flex-col lg:flex-row bg-stone-50">

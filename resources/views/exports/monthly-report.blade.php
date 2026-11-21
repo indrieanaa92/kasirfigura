@@ -1,7 +1,7 @@
 <table>
     <thead>
         <tr>
-            <th colspan="6">LAPORAN PENJUALAN INUL WIJAYA FRAME - {{ strtoupper($monthLabel) }}</th>
+            <th colspan="6">LAPORAN PENJUALAN INUL WIJAYA PIGURA - {{ strtoupper($monthLabel) }}</th>
         </tr>
     </thead>
     <tbody>

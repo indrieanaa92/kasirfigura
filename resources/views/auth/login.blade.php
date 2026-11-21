@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Masuk - Inul Wijaya Frame')
+@section('title', 'Masuk - Inul Wijaya Pigura')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-950 via-stone-900 to-amber-950 p-4 sm:p-6">
@@ -14,7 +14,7 @@
                 </div>
                 <h1 class="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight text-white">
                     Inul Wijaya<br>
-                    <span class="text-amber-300">Frame</span>
+                    <span class="text-amber-300">Pigura</span>
                 </h1>
                 <p class="mt-3 text-sm text-stone-300 leading-relaxed">
                     Kelola transaksi kasir lebih cepat, pantau stok bingkai &amp; figura secara real-time, serta unduh laporan keuangan bulanan dalam satu klik.
@@ -25,7 +25,7 @@
                 <p class="font-semibold text-amber-300">Akun Demo (Seeder):</p>
                 <p>Admin: <span class="font-mono text-white break-all">admin@kasirfigura.test</span></p>
                 <p>Kasir: <span class="font-mono text-white break-all">kasir@kasirfigura.test</span></p>
-                <p>Password: <span class="font-mono text-white">password</span></p>
+                <p>Password: <span class="font-mono text-white">Pasuruan99</span></p>
             </div>
         </div>
 

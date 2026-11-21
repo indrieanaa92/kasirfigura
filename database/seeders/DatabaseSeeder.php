@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@kasirfigura.test'],
             [
                 'name' => 'Admin Galeri Figura',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('Pasuruan99'),
                 'role' => User::ROLE_ADMIN,
             ]
         );
@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'kasir@kasirfigura.test'],
             [
                 'name' => 'Kasir Utama',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('Pasuruan99'),
                 'role' => User::ROLE_KASIR,
             ]
         );

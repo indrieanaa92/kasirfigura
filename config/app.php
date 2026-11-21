@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Inul Wijaya Frame'),
+    'name' => env('APP_NAME', 'Inul Wijaya Pigura'),
 
     /*
     |--------------------------------------------------------------------------

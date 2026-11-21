@@ -24,8 +24,10 @@ foreach ($directories as $directory) {
 }
 
 $envOverrides = [
-    'APP_NAME' => 'Inul Wijaya Frame',
-    'STORE_NAME' => 'INUL WIJAYA FRAME',
+    'APP_NAME' => 'Inul Wijaya Pigura',
+    'STORE_NAME' => 'INUL WIJAYA PIGURA',
+    'STORE_ADDRESS' => 'Jajar Tengah - Gondangwetan - Pasuruan',
+    'STORE_PHONE' => '085 646 586 999',
     'APP_ENV' => 'production',
     'APP_DEBUG' => 'false',
     'APP_KEY' => 'base64:Jv7JrWk2XUW/y4ZQfJ/aaoYH4QvH2SJzaJcFWndgyag=',
