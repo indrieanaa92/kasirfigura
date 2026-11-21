@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Exports\MonthlyReportExport;
+use App\Models\Transaction;
 use App\Services\SalesReportService;
 use App\Services\SimpleXlsxExporter;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -51,5 +54,23 @@ class AdminController extends Controller
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]
         );
+    }
+
+    /**
+     * Delete transaction record, restore purchased quantities to product stocks, and cascade details.
+     */
+    public function destroyTransaction(Transaction $transaction): RedirectResponse
+    {
+        DB::transaction(function () use ($transaction): void {
+            foreach ($transaction->details as $detail) {
+                if ($detail->product) {
+                    $detail->product->increment('stock', $detail->quantity);
+                }
+            }
+
+            $transaction->delete();
+        });
+
+        return back()->with('success', "Transaksi {$transaction->invoice_number} berhasil dihapus dan stok produk telah dikembalikan.");
     }
 }

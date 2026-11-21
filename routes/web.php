@@ -37,15 +37,17 @@ Route::middleware(['auth', 'role:kasir'])
     ->group(function () {
         Route::get('/pos', [PosController::class, 'index'])->name('index');
         Route::post('/checkout', [PosController::class, 'checkout'])->name('checkout');
+        Route::delete('/transactions/{transaction}', [PosController::class, 'destroyTransaction'])->name('transactions.destroy');
     });
 
-// Admin Routes (Financial Dashboard, Excel Export, Product CRUD)
+// Admin Routes (Financial Dashboard, Excel Export, Product CRUD, Customer/Member CRUD)
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/reports/export', [AdminController::class, 'exportExcel'])->name('reports.export');
+        Route::delete('/transactions/{transaction}', [AdminController::class, 'destroyTransaction'])->name('transactions.destroy');
 
         Route::get('/products', [ProductController::class, 'index'])->name('products.index');
         Route::post('/products', [ProductController::class, 'store'])->name('products.store');

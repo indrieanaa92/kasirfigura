@@ -207,4 +207,39 @@ class PosController extends Controller
 
         return $invoice;
     }
+
+    /**
+     * Cancel/delete a cashier transaction, restore product stock, and refresh catalog/recents.
+     */
+    public function destroyTransaction(Request $request, Transaction $transaction): JsonResponse|RedirectResponse
+    {
+        if ($transaction->user_id !== $request->user()->id && ! $request->user()->isAdmin()) {
+            abort(403, 'Anda tidak memiliki hak untuk menghapus transaksi ini.');
+        }
+
+        DB::transaction(function () use ($transaction): void {
+            foreach ($transaction->details as $detail) {
+                if ($detail->product) {
+                    $detail->product->increment('stock', $detail->quantity);
+                }
+            }
+
+            $transaction->delete();
+        });
+
+        if ($request->expectsJson()) {
+            $availableProducts = Product::available()
+                ->orderBy('name')
+                ->get(['id', 'name', 'size', 'price', 'price_member', 'price_umum', 'stock']);
+
+            return response()->json([
+                'message' => "Transaksi {$transaction->invoice_number} berhasil dihapus dan stok produk dikembalikan.",
+                'products' => $availableProducts,
+            ]);
+        }
+
+        return redirect()
+            ->route('pos.index')
+            ->with('success', "Transaksi {$transaction->invoice_number} berhasil dihapus dan stok produk dikembalikan.");
+    }
 }

@@ -566,12 +566,21 @@
                             </p>
                         </div>
 
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2">
                             <span class="font-bold font-mono text-base text-amber-700" x-text="formatRupiah(trx.total_amount)"></span>
                             <button type="button"
                                     @click="openReceipt(trx)"
                                     class="min-h-[38px] rounded-xl border border-stone-300 bg-white hover:bg-amber-50 hover:border-amber-400 active:bg-amber-100 px-3.5 py-1.5 text-xs font-semibold text-stone-700 transition cursor-pointer">
                                 Cetak Struk
+                            </button>
+                            <button type="button"
+                                    @click="deleteTransaction(trx)"
+                                    class="min-h-[38px] inline-flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 active:bg-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition cursor-pointer"
+                                    title="Hapus Transaksi">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Hapus
                             </button>
                         </div>
                     </div>
@@ -886,6 +895,35 @@
 
             printReceipt() {
                 window.print();
+            },
+
+            async deleteTransaction(trx) {
+                if (!confirm(`Apakah Anda yakin ingin menghapus transaksi ${trx.invoice_number}? Stok figura akan otomatis dikembalikan.`)) {
+                    return;
+                }
+                try {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const response = await fetch(`/kasir/transactions/${trx.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                    });
+                    const payload = await response.json();
+                    if (response.ok) {
+                        this.recentTransactions = this.recentTransactions.filter(t => t.id !== trx.id);
+                        if (Array.isArray(payload.products)) {
+                            this.products = payload.products;
+                        }
+                        this.showNotice(payload.message || 'Transaksi berhasil dihapus.');
+                    } else {
+                        alert(payload.message || 'Gagal menghapus transaksi.');
+                    }
+                } catch (e) {
+                    alert('Terjadi kesalahan saat menghapus transaksi.');
+                }
             },
 
             async submitCheckout() {
