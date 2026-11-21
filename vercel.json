@@ -1,5 +1,5 @@
 {
-    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "version": 2,
     "buildCommand": "npm run build",
     "outputDirectory": "public",
     "functions": {
@@ -7,10 +7,22 @@
             "runtime": "vercel-php@0.7.3"
         }
     },
-    "rewrites": [
+    "routes": [
         {
-            "source": "/(.*)",
-            "destination": "/api/index.php"
+            "src": "/build/(.*)",
+            "dest": "/build/$1"
+        },
+        {
+            "src": "/(css|js|images|fonts)/(.*)",
+            "dest": "/$1/$2"
+        },
+        {
+            "src": "/(favicon\\.ico|robots\\.txt)",
+            "dest": "/$1"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/api/index.php"
         }
     ]
 }
