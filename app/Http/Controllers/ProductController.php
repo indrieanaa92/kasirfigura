@@ -83,29 +83,22 @@ class ProductController extends Controller
         $fallbackPrice = $request->input('price');
 
         $request->merge([
-            'price_sales' => $request->input('price_sales', $fallbackPrice),
-            'price_agen' => $request->input('price_agen', $fallbackPrice),
             'price_umum' => $request->input('price_umum', $fallbackPrice),
+            'price_member' => $request->input('price_member', $request->input('price_sales', $fallbackPrice)),
         ]);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'size' => ['required', 'string', 'max:50'],
-            'price_sales' => ['required', 'numeric', 'min:0'],
-            'price_agen' => ['required', 'numeric', 'min:0'],
             'price_umum' => ['required', 'numeric', 'min:0'],
+            'price_member' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
         ], [
             'name.required' => 'Nama figura wajib diisi.',
             'size.required' => 'Ukuran figura wajib diisi.',
-            'price_sales.required' => 'Harga Sales wajib diisi.',
-            'price_sales.min' => 'Harga Sales tidak boleh negatif.',
-            'price_agen.required' => 'Harga Agen wajib diisi.',
-            'price_agen.min' => 'Harga Agen tidak boleh negatif.',
-            'price_umum.required' => 'Harga Umum wajib diisi.',
-            'price_umum.min' => 'Harga Umum tidak boleh negatif.',
-            'stock.required' => 'Stok wajib diisi.',
-            'stock.min' => 'Stok tidak boleh negatif.',
+            'price_umum.required' => 'Harga umum figura wajib diisi.',
+            'price_member.required' => 'Harga member figura wajib diisi.',
+            'stock.required' => 'Stok figura wajib diisi.',
         ]);
 
         $validated['price'] = $validated['price_umum'];

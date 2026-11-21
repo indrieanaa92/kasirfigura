@@ -21,9 +21,10 @@ class Product extends Model
         'name',
         'size',
         'price',
+        'price_member',
+        'price_umum',
         'price_sales',
         'price_agen',
-        'price_umum',
         'stock',
     ];
 
@@ -36,11 +37,8 @@ class Product extends Model
             if ($product->price_umum === null && $product->price !== null) {
                 $product->price_umum = $product->price;
             }
-            if ($product->price_agen === null && $product->price !== null) {
-                $product->price_agen = $product->price;
-            }
-            if ($product->price_sales === null && $product->price !== null) {
-                $product->price_sales = $product->price;
+            if ($product->price_member === null && $product->price !== null) {
+                $product->price_member = $product->price_sales !== null ? $product->price_sales : round(((float) $product->price) * 0.85);
             }
             if ($product->price_umum !== null) {
                 $product->price = $product->price_umum;
@@ -57,23 +55,26 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
+            'price_member' => 'decimal:2',
+            'price_umum' => 'decimal:2',
             'price_sales' => 'decimal:2',
             'price_agen' => 'decimal:2',
-            'price_umum' => 'decimal:2',
             'stock' => 'integer',
         ];
     }
 
     /**
-     * Resolve unit price based on buyer status (sales, agen, or umum).
+     * Resolve unit price based on buyer status (member vs umum).
      */
     public function getPriceForCustomerType(string $customerType): float
     {
-        return match ($customerType) {
-            Transaction::CUSTOMER_SALES => (float) ($this->price_sales ?? $this->price),
-            Transaction::CUSTOMER_AGEN => (float) ($this->price_agen ?? $this->price),
-            default => (float) ($this->price_umum ?? $this->price),
-        };
+        $type = strtolower(trim($customerType));
+
+        if ($type === Transaction::CUSTOMER_MEMBER || $type === 'sales' || $type === 'agen') {
+            return (float) ($this->price_member ?? $this->price_sales ?? round(((float) $this->price) * 0.85));
+        }
+
+        return (float) ($this->price_umum ?? $this->price);
     }
 
     /**

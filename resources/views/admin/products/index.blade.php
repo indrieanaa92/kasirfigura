@@ -7,97 +7,135 @@
     @include('layouts.partials.admin-sidebar')
 
     <main x-data="productManager(@js($products))" class="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 space-y-6">
+        {{-- Page Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-extrabold text-stone-900">Manajemen Produk Figura</h1>
-                <p class="text-sm text-stone-500">Tambah, ubah harga, kelola ukuran, dan pantau ketersediaan stok.</p>
+                <p class="text-sm text-stone-500">Kelola katalog bingkai, atur harga Umum &amp; Member, serta pantau ketersediaan stok.</p>
             </div>
 
             <button type="button"
                     @click="openCreate()"
-                    class="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-700 via-amber-600 to-orange-600 hover:from-amber-800 hover:via-amber-700 hover:to-orange-700 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-700/20 transition cursor-pointer">
-                <span>+ Tambah Figura</span>
+                    class="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-700 via-amber-600 to-orange-600 hover:from-amber-800 hover:via-amber-700 hover:to-orange-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-700/20 transition cursor-pointer">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>+ Tambah Figura Baru</span>
             </button>
         </div>
 
-        {{-- Search Bar --}}
-        <form method="GET" action="{{ route('admin.products.index') }}" class="flex flex-wrap gap-2.5 sm:gap-3">
-            <input type="text"
-                   name="search"
-                   value="{{ $search }}"
-                   placeholder="Cari nama atau ukuran figura..."
-                   class="w-full sm:w-80 min-h-[44px] rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/20">
-            <button type="submit"
-                    class="min-h-[44px] rounded-xl bg-amber-100 hover:bg-amber-200 px-5 py-2.5 text-sm font-semibold text-amber-900 transition cursor-pointer">
-                Cari
-            </button>
-            @if ($search !== '')
-                <a href="{{ route('admin.products.index') }}"
-                   class="min-h-[44px] inline-flex items-center rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-600 hover:bg-stone-50">
-                    Reset
-                </a>
-            @endif
-        </form>
+        {{-- Stat Summary Cards --}}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="rounded-2xl bg-white border border-stone-200/80 p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Total Varian Figura</p>
+                <p class="mt-2 text-2xl font-extrabold text-stone-900">{{ $products->count() }} Varian</p>
+                <p class="mt-1 text-xs text-stone-500">Terdaftar di katalog toko</p>
+            </div>
 
-        {{-- Mobile Card List (< md) --}}
+            <div class="rounded-2xl bg-gradient-to-br from-amber-700 via-amber-600 to-orange-600 p-5 text-white shadow-lg shadow-amber-700/20">
+                <p class="text-xs font-semibold uppercase tracking-wider text-amber-100">Stok Siap Jual</p>
+                <p class="mt-2 text-2xl font-extrabold">{{ $products->where('stock', '>', 5)->count() }} Varian</p>
+                <p class="mt-1 text-xs text-amber-100/90">Kondisi stok aman &amp; tersedia</p>
+            </div>
+
+            <div class="rounded-2xl bg-white border border-stone-200/80 p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wider text-stone-400">Perlu Restok</p>
+                <p class="mt-2 text-2xl font-extrabold text-rose-600">{{ $products->where('stock', '<=', 5)->count() }} Varian</p>
+                <p class="mt-1 text-xs text-stone-500">Stok menipis atau habis</p>
+            </div>
+        </div>
+
+        {{-- Search & Filter Toolbar --}}
+        <div class="rounded-2xl bg-white border border-stone-200/80 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+            <form method="GET" action="{{ route('admin.products.index') }}" class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                <div class="relative w-full sm:w-80">
+                    <svg class="h-4 w-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text"
+                           name="search"
+                           value="{{ $search }}"
+                           placeholder="Cari nama atau ukuran figura..."
+                           class="w-full min-h-[42px] rounded-xl border border-stone-200 bg-stone-50 pl-10 pr-4 py-2 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
+                </div>
+
+                <button type="submit"
+                        class="min-h-[42px] rounded-xl bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 text-xs font-bold transition cursor-pointer">
+                    Cari
+                </button>
+
+                @if ($search !== '')
+                    <a href="{{ route('admin.products.index') }}"
+                       class="min-h-[42px] inline-flex items-center rounded-xl border border-stone-200 bg-white hover:bg-stone-50 px-3.5 py-2 text-xs font-semibold text-stone-600">
+                        Reset
+                    </a>
+                @endif
+            </form>
+
+            <span class="text-xs font-medium text-stone-500">
+                Menampilkan <strong class="text-stone-800">{{ $products->count() }}</strong> produk figura
+            </span>
+        </div>
+
+        {{-- Mobile Cards (< md) --}}
         <div class="grid grid-cols-1 gap-3 md:hidden">
             @forelse ($products as $product)
                 <div class="rounded-2xl bg-white border border-stone-200/80 p-4 shadow-sm space-y-3">
                     <div class="flex items-start justify-between gap-2">
                         <div>
-                            <h3 class="text-sm font-bold text-stone-900">{{ $product->name }}</h3>
-                            <span class="mt-1 inline-flex rounded-lg bg-amber-50 border border-amber-200/70 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                            <h3 class="text-base font-bold text-stone-900 leading-snug">{{ $product->name }}</h3>
+                            <span class="mt-1 inline-flex rounded-lg bg-amber-50 border border-amber-200/70 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
                                 {{ $product->size }}
                             </span>
                         </div>
                         @if ($product->stock === 0)
-                            <span class="inline-flex rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700 border border-rose-200 shrink-0">
+                            <span class="inline-flex rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700 border border-rose-200 shrink-0">
                                 Habis (0)
                             </span>
                         @elseif ($product->stock <= 5)
-                            <span class="inline-flex rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-700 border border-orange-200 shrink-0">
+                            <span class="inline-flex rounded-full bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700 border border-orange-200 shrink-0">
                                 Menipis ({{ $product->stock }})
                             </span>
                         @else
-                            <span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200 shrink-0">
-                                Tersedia ({{ $product->stock }})
+                            <span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200 shrink-0">
+                                Stok: {{ $product->stock }}
                             </span>
                         @endif
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2 rounded-xl bg-stone-50 border border-stone-200/70 p-2.5 text-center text-[11px]">
-                        <div>
-                            <p class="text-stone-500 font-medium">Sales</p>
-                            <p class="font-bold text-stone-800">Rp {{ number_format($product->price_sales ?: $product->price, 0, ',', '.') }}</p>
+                    {{-- Price Grid --}}
+                    <div class="grid grid-cols-2 gap-2 rounded-xl bg-stone-50 border border-stone-200/70 p-3 text-center text-xs">
+                        <div class="pr-2">
+                            <p class="text-stone-500 font-medium text-[11px] uppercase tracking-wider">Harga Umum</p>
+                            <p class="font-bold font-mono text-sm text-stone-900 mt-0.5">
+                                Rp {{ number_format($product->price_umum ?: $product->price, 0, ',', '.') }}
+                            </p>
                         </div>
-                        <div class="border-x border-stone-200 px-1">
-                            <p class="text-stone-500 font-medium">Agen</p>
-                            <p class="font-bold text-stone-800">Rp {{ number_format($product->price_agen ?: $product->price, 0, ',', '.') }}</p>
-                        </div>
-                        <div>
-                            <p class="text-stone-500 font-medium">Umum</p>
-                            <p class="font-bold text-amber-700">Rp {{ number_format($product->price_umum ?: $product->price, 0, ',', '.') }}</p>
+                        <div class="border-l border-stone-200 pl-2">
+                            <p class="text-amber-800 font-bold text-[11px] uppercase tracking-wider">⭐ Harga Member</p>
+                            <p class="font-bold font-mono text-sm text-amber-700 mt-0.5">
+                                Rp {{ number_format($product->price_member ?: ($product->price_sales ?: $product->price), 0, ',', '.') }}
+                            </p>
                         </div>
                     </div>
 
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-stone-100">
-                            <button type="button"
-                                    @click="openEditById({{ $product->id }})"
-                                    class="min-h-[40px] rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200/70 px-4 py-2 text-xs font-semibold text-amber-800 transition cursor-pointer">
-                                Edit
-                            </button>
+                        <button type="button"
+                                @click="openEditById({{ $product->id }})"
+                                class="min-h-[38px] rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 px-4 py-1.5 text-xs font-bold text-amber-800 transition cursor-pointer">
+                            Edit
+                        </button>
 
-                            <form method="POST"
-                                  action="{{ route('admin.products.destroy', $product) }}"
-                                  onsubmit="return confirm('Hapus produk {{ addslashes($product->name) }}?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="min-h-[40px] rounded-xl bg-rose-50 hover:bg-rose-100 px-4 py-2 text-xs font-semibold text-rose-700 transition cursor-pointer">
-                                    Hapus
-                                </button>
-                            </form>
-                        </div>
+                        <form method="POST"
+                              action="{{ route('admin.products.destroy', $product) }}"
+                              onsubmit="return confirm('Hapus produk {{ addslashes($product->name) }}?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                    class="min-h-[38px] rounded-xl bg-rose-50 hover:bg-rose-100 px-4 py-1.5 text-xs font-semibold text-rose-700 transition cursor-pointer">
+                                Hapus
+                            </button>
+                        </form>
                     </div>
                 </div>
             @empty
@@ -107,52 +145,76 @@
             @endforelse
         </div>
 
-        {{-- Tablet & Desktop Products Table (md+) --}}
-        <div class="hidden md:block rounded-2xl bg-white border border-stone-200/80 shadow-sm overflow-hidden">
+        {{-- Desktop Products Table (md+) - Neat & Structured --}}
+        <div class="hidden md:block rounded-2xl bg-white border border-stone-200/90 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-amber-50/70 text-xs uppercase text-amber-900 font-semibold">
+                <table class="w-full text-left text-sm table-fixed">
+                    <thead class="bg-amber-50/80 text-xs uppercase text-amber-900 font-bold border-b border-amber-200/70">
                         <tr>
-                            <th class="px-6 py-3.5">Nama Figura</th>
-                            <th class="px-6 py-3.5">Ukuran</th>
-                            <th class="px-6 py-3.5">Harga (Sales / Agen / Umum)</th>
-                            <th class="px-6 py-3.5">Stok</th>
-                            <th class="px-6 py-3.5 text-right">Aksi</th>
+                            <th class="px-4 py-3.5 w-14 text-center">No</th>
+                            <th class="px-5 py-3.5 w-64">Nama Figura</th>
+                            <th class="px-4 py-3.5 w-32 text-center">Ukuran</th>
+                            <th class="px-5 py-3.5 w-40 text-right">Harga Umum</th>
+                            <th class="px-5 py-3.5 w-40 text-right">Harga Member</th>
+                            <th class="px-4 py-3.5 w-36 text-center">Status Stok</th>
+                            <th class="px-5 py-3.5 w-40 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-stone-100">
-                        @forelse ($products as $product)
-                            <tr class="hover:bg-amber-50/30 transition">
-                                <td class="px-6 py-4 font-semibold text-stone-900">{{ $product->name }}</td>
-                                <td class="px-6 py-4">
+                        @forelse ($products as $index => $product)
+                            <tr class="hover:bg-amber-50/25 transition">
+                                {{-- No --}}
+                                <td class="px-4 py-4 text-center font-bold text-stone-400 text-xs">
+                                    {{ $index + 1 }}
+                                </td>
+
+                                {{-- Nama Figura --}}
+                                <td class="px-5 py-4">
+                                    <div class="font-bold text-stone-900 leading-snug">{{ $product->name }}</div>
+                                </td>
+
+                                {{-- Ukuran --}}
+                                <td class="px-4 py-4 text-center">
                                     <span class="inline-flex rounded-lg bg-amber-50 border border-amber-200/70 px-2.5 py-1 text-xs font-semibold text-amber-800">
                                         {{ $product->size }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-xs space-y-0.5">
-                                    <div><span class="text-stone-500">Sales:</span> <span class="font-bold text-stone-800">Rp {{ number_format($product->price_sales ?: $product->price, 0, ',', '.') }}</span></div>
-                                    <div><span class="text-stone-500">Agen:</span> <span class="font-bold text-stone-800">Rp {{ number_format($product->price_agen ?: $product->price, 0, ',', '.') }}</span></div>
-                                    <div><span class="text-stone-500">Umum:</span> <span class="font-bold text-amber-700">Rp {{ number_format($product->price_umum ?: $product->price, 0, ',', '.') }}</span></div>
+
+                                {{-- Harga Umum --}}
+                                <td class="px-5 py-4 text-right font-mono font-bold text-stone-900 text-sm">
+                                    Rp {{ number_format($product->price_umum ?: $product->price, 0, ',', '.') }}
                                 </td>
-                                <td class="px-6 py-4">
+
+                                {{-- Harga Member --}}
+                                <td class="px-5 py-4 text-right font-mono font-bold text-amber-700 text-sm">
+                                    <span class="inline-flex items-center gap-1">
+                                        <span class="text-[10px] text-amber-600 font-sans">⭐</span>
+                                        <span>Rp {{ number_format($product->price_member ?: ($product->price_sales ?: $product->price), 0, ',', '.') }}</span>
+                                    </span>
+                                </td>
+
+                                {{-- Status Stok --}}
+                                <td class="px-4 py-4 text-center">
                                     @if ($product->stock === 0)
-                                        <span class="inline-flex rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700 border border-rose-200">
+                                        <span class="inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 border border-rose-200">
                                             Habis (0)
                                         </span>
                                     @elseif ($product->stock <= 5)
-                                        <span class="inline-flex rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-700 border border-orange-200">
+                                        <span class="inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 border border-orange-200">
                                             Menipis ({{ $product->stock }})
                                         </span>
                                     @else
-                                        <span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
                                             Tersedia ({{ $product->stock }})
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+
+                                {{-- Aksi --}}
+                                <td class="px-5 py-4 text-center space-x-1.5 whitespace-nowrap">
                                     <button type="button"
                                             @click="openEditById({{ $product->id }})"
-                                            class="min-h-[36px] rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200/70 px-3.5 py-1.5 text-xs font-semibold text-amber-800 transition cursor-pointer">
+                                            class="min-h-[34px] rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-bold text-amber-800 transition cursor-pointer">
                                         Edit
                                     </button>
 
@@ -163,7 +225,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                                class="min-h-[36px] rounded-lg bg-rose-50 hover:bg-rose-100 px-3.5 py-1.5 text-xs font-semibold text-rose-700 transition cursor-pointer">
+                                                class="min-h-[34px] rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-700 transition cursor-pointer">
                                             Hapus
                                         </button>
                                     </form>
@@ -171,8 +233,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-10 text-center text-sm text-stone-500">
-                                    Belum ada data produk figura.
+                                <td colspan="7" class="px-6 py-12 text-center text-sm text-stone-500">
+                                    Belum ada data produk figura yang sesuai.
                                 </td>
                             </tr>
                         @endforelse
@@ -219,29 +281,7 @@
                                class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-stone-700 mb-1">Harga Sales (Rp)</label>
-                            <input type="number"
-                                   name="price_sales"
-                                   min="0"
-                                   step="500"
-                                   x-model="form.price_sales"
-                                   required
-                                   class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-stone-700 mb-1">Harga Agen (Rp)</label>
-                            <input type="number"
-                                   name="price_agen"
-                                   min="0"
-                                   step="500"
-                                   x-model="form.price_agen"
-                                   required
-                                   class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
-                        </div>
-
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-stone-700 mb-1">Harga Umum (Rp)</label>
                             <input type="number"
@@ -252,10 +292,21 @@
                                    required
                                    class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
                         </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-700 mb-1">Harga Member (Rp)</label>
+                            <input type="number"
+                                   name="price_member"
+                                   min="0"
+                                   step="500"
+                                   x-model="form.price_member"
+                                   required
+                                   class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm focus:border-amber-600 focus:bg-white focus:outline-none">
+                        </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Stok</label>
+                        <label class="block text-xs font-semibold text-stone-700 mb-1">Jumlah Stok (Unit)</label>
                         <input type="number"
                                name="stock"
                                min="0"
@@ -291,16 +342,15 @@
             form: {
                 name: '',
                 size: '',
-                price_sales: '',
-                price_agen: '',
                 price_umum: '',
+                price_member: '',
                 stock: '',
             },
 
             openCreate() {
                 this.isEditing = false;
                 this.formAction = '{{ route("admin.products.store") }}';
-                this.form = { name: '', size: '', price_sales: '', price_agen: '', price_umum: '', stock: 10 };
+                this.form = { name: '', size: '', price_umum: '', price_member: '', stock: 10 };
                 this.modalOpen = true;
             },
 
@@ -313,9 +363,8 @@
                 this.form = {
                     name: product.name,
                     size: product.size,
-                    price_sales: Math.round(Number(product.price_sales ?? product.price)),
-                    price_agen: Math.round(Number(product.price_agen ?? product.price)),
                     price_umum: Math.round(Number(product.price_umum ?? product.price)),
+                    price_member: Math.round(Number(product.price_member ?? product.price_sales ?? product.price)),
                     stock: product.stock,
                 };
                 this.modalOpen = true;

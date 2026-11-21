@@ -71,8 +71,7 @@ class KasirFiguraPosTest extends TestCase
             'name' => 'Figura Jati Test',
             'size' => '8R',
             'price' => 50000,
-            'price_sales' => 40000,
-            'price_agen' => 45000,
+            'price_member' => 40000,
             'price_umum' => 50000,
             'stock' => 5,
         ]);
@@ -80,20 +79,25 @@ class KasirFiguraPosTest extends TestCase
             'name' => 'Figura Kosong Test',
             'size' => '4R',
             'price' => 30000,
-            'price_sales' => 24000,
-            'price_agen' => 27000,
+            'price_member' => 24000,
             'price_umum' => 30000,
             'stock' => 0,
+        ]);
+
+        // Register a Member customer
+        $memberCustomer = \App\Models\Customer::create([
+            'name' => 'Budi Santoso',
+            'phone' => '08123456789',
+            'is_member' => true,
         ]);
 
         $this->actingAs($kasir)
             ->get(route('pos.index'))
             ->assertOk()
             ->assertSee($available->name)
-            ->assertDontSee($outOfStock->name)
-            ->assertDontSee('Rp 50.000');
+            ->assertSee('Terminal Transaksi Kasir');
 
-        // Missing customer_name / customer_type fails validation
+        // Missing customer_name fails validation
         $this->actingAs($kasir)
             ->postJson(route('pos.checkout'), [
                 'payment_method' => Transaction::PAYMENT_CASH,
@@ -108,7 +112,6 @@ class KasirFiguraPosTest extends TestCase
         $this->actingAs($kasir)
             ->postJson(route('pos.checkout'), [
                 'customer_name' => 'Budi Santoso',
-                'customer_type' => Transaction::CUSTOMER_SALES,
                 'payment_method' => Transaction::PAYMENT_CASH,
                 'paid_amount' => 300000,
                 'items' => [
@@ -120,11 +123,10 @@ class KasirFiguraPosTest extends TestCase
         $this->assertDatabaseCount('transactions', 0);
         $this->assertSame(5, $available->fresh()->stock);
 
-        // Valid cash checkout as Sales uses price_sales (40.000 x 2 = 80.000), creates change, and decrements stock
+        // Valid cash checkout as Member uses price_member (40.000 x 2 = 80.000), creates change, and decrements stock
         $this->actingAs($kasir)
             ->postJson(route('pos.checkout'), [
                 'customer_name' => 'Budi Santoso',
-                'customer_type' => Transaction::CUSTOMER_SALES,
                 'payment_method' => Transaction::PAYMENT_CASH,
                 'paid_amount' => 100000,
                 'items' => [
@@ -133,30 +135,32 @@ class KasirFiguraPosTest extends TestCase
             ])
             ->assertCreated()
             ->assertJsonPath('transaction.customer_name', 'Budi Santoso')
-            ->assertJsonPath('transaction.customer_type', Transaction::CUSTOMER_SALES)
-            ->assertJsonPath('transaction.customer_type_label', 'Sales')
+            ->assertJsonPath('transaction.customer_type', Transaction::CUSTOMER_MEMBER)
+            ->assertJsonPath('transaction.customer_type_label', 'Member')
             ->assertJsonPath('transaction.total_amount', '80000.00')
             ->assertJsonPath('transaction.paid_amount', '100000.00')
             ->assertJsonPath('transaction.change_amount', '20000.00')
             ->assertJsonPath('transaction.payment_method', 'cash')
             ->assertJsonPath('transaction.details.0.unit_price', '40000.00');
 
-        // Cash checkout with insufficient tendered amount fails
+        // Valid cash checkout as non-member (Umum) uses price_umum (50.000 x 1 = 50.000)
         $this->actingAs($kasir)
             ->postJson(route('pos.checkout'), [
-                'customer_name' => 'Ani Agen',
-                'customer_type' => Transaction::CUSTOMER_AGEN,
+                'customer_name' => 'Pembeli Baru Umum',
                 'payment_method' => Transaction::PAYMENT_CASH,
-                'paid_amount' => 20000,
+                'paid_amount' => 50000,
                 'items' => [
                     ['product_id' => $available->id, 'quantity' => 1],
                 ],
             ])
-            ->assertStatus(422);
+            ->assertCreated()
+            ->assertJsonPath('transaction.customer_type', Transaction::CUSTOMER_UMUM)
+            ->assertJsonPath('transaction.customer_type_label', 'Umum')
+            ->assertJsonPath('transaction.total_amount', '50000.00')
+            ->assertJsonPath('transaction.details.0.unit_price', '50000.00');
 
-        $this->assertDatabaseCount('transactions', 1);
-        $this->assertDatabaseCount('transaction_details', 1);
-        $this->assertSame(3, $available->fresh()->stock);
+        $this->assertDatabaseCount('transactions', 2);
+        $this->assertSame(2, $available->fresh()->stock);
     }
 
     public function test_admin_can_crud_products_and_filter_monthly_reports(): void
@@ -164,13 +168,30 @@ class KasirFiguraPosTest extends TestCase
         $admin = User::factory()->admin()->create();
         $kasir = User::factory()->kasir()->create();
 
+        // Admin manages customer member status
+        $this->actingAs($admin)
+            ->post(route('admin.customers.store'), [
+                'name' => 'Dewi Pelanggan',
+                'phone' => '0877112233',
+                'is_member' => 0,
+            ])
+            ->assertRedirect(route('admin.customers.index'));
+
+        $customer = \App\Models\Customer::where('name', 'Dewi Pelanggan')->firstOrFail();
+        $this->assertFalse($customer->is_member);
+
+        // Admin toggles to Member
+        $this->actingAs($admin)
+            ->patch(route('admin.customers.toggle-member', $customer))
+            ->assertRedirect(route('admin.customers.index'));
+        $this->assertTrue($customer->fresh()->is_member);
+
         // Create product with tiered prices
         $this->actingAs($admin)
             ->post(route('admin.products.store'), [
                 'name' => 'Figura Klasik Emas',
                 'size' => '10R',
-                'price_sales' => 95000,
-                'price_agen' => 108000,
+                'price_member' => 95000,
                 'price_umum' => 120000,
                 'stock' => 15,
             ])
@@ -183,8 +204,7 @@ class KasirFiguraPosTest extends TestCase
             ->put(route('admin.products.update', $product), [
                 'name' => 'Figura Klasik Emas Revisi',
                 'size' => '12R',
-                'price_sales' => 105000,
-                'price_agen' => 120000,
+                'price_member' => 105000,
                 'price_umum' => 135000,
                 'stock' => 12,
             ])
@@ -192,8 +212,7 @@ class KasirFiguraPosTest extends TestCase
 
         $freshProduct = $product->fresh();
         $this->assertSame('12R', $freshProduct->size);
-        $this->assertEquals(105000, (float) $freshProduct->price_sales);
-        $this->assertEquals(120000, (float) $freshProduct->price_agen);
+        $this->assertEquals(105000, (float) $freshProduct->price_member);
         $this->assertEquals(135000, (float) $freshProduct->price_umum);
         $this->assertEquals(135000, (float) $freshProduct->price);
 

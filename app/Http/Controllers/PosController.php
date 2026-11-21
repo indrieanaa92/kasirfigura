@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
@@ -23,16 +24,20 @@ class PosController extends Controller
     {
         $products = Product::available()
             ->orderBy('name')
-            ->get(['id', 'name', 'size', 'price', 'price_sales', 'price_agen', 'price_umum', 'stock']);
+            ->get(['id', 'name', 'size', 'price', 'price_member', 'price_umum', 'stock']);
 
-        $recentTransactions = Transaction::with(['user:id,name', 'details.product:id,name,size,price,price_sales,price_agen,price_umum'])
+        $customers = Customer::orderBy('name')
+            ->get(['id', 'name', 'phone', 'is_member']);
+
+        $recentTransactions = Transaction::with(['user:id,name', 'details.product:id,name,size,price,price_member,price_umum'])
             ->where('user_id', $request->user()->id)
             ->latest()
-            ->take(5)
+            ->take(6)
             ->get();
 
         return view('pos.index', [
             'products' => $products,
+            'customers' => $customers,
             'recentTransactions' => $recentTransactions,
             'paymentMethods' => Transaction::PAYMENT_METHODS,
             'customerTypes' => Transaction::CUSTOMER_TYPES,
@@ -46,7 +51,7 @@ class PosController extends Controller
     {
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:100'],
-            'customer_type' => ['required', 'string', Rule::in(array_keys(Transaction::CUSTOMER_TYPES))],
+            'customer_type' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -55,18 +60,32 @@ class PosController extends Controller
         ], [
             'customer_name.required' => 'Nama pembeli wajib diisi.',
             'customer_name.max' => 'Nama pembeli maksimal 100 karakter.',
-            'customer_type.required' => 'Status pembeli (Sales, Agen, atau Umum) wajib dipilih.',
-            'customer_type.in' => 'Status pembeli harus Sales, Agen, atau Umum.',
-            'items.required' => 'Keranjang belanja masih kosong.',
-            'items.min' => 'Pilih minimal 1 figura sebelum checkout.',
+            'items.required' => 'Daftar produk masih kosong.',
+            'items.min' => 'Tambahkan minimal 1 figura sebelum checkout.',
             'items.*.quantity.min' => 'Jumlah pembelian minimal 1 unit.',
             'payment_method.in' => 'Metode pembayaran tidak valid.',
             'paid_amount.min' => 'Nominal pembayaran tidak boleh negatif.',
         ]);
 
         $paymentMethod = $validated['payment_method'] ?? Transaction::PAYMENT_CASH;
-        $customerType = $validated['customer_type'];
         $customerName = trim((string) $validated['customer_name']);
+
+        // Check if buyer is registered as Member in the customers database (controlled by Admin)
+        $existingCustomer = Customer::whereRaw('LOWER(name) = ?', [mb_strtolower($customerName)])->first();
+
+        if ($existingCustomer && $existingCustomer->is_member) {
+            $customerType = Transaction::CUSTOMER_MEMBER;
+        } else {
+            $customerType = Transaction::CUSTOMER_UMUM;
+
+            // Automatically record new customer so Admin can easily manage and grant Member status later
+            if (! $existingCustomer) {
+                Customer::create([
+                    'name' => $customerName,
+                    'is_member' => false,
+                ]);
+            }
+        }
 
         // Merge duplicate product_ids so stock validation checks aggregate requested quantity.
         $requestedQuantities = collect($validated['items'])
@@ -153,18 +172,22 @@ class PosController extends Controller
                 $item['product']->decrement('stock', $item['quantity']);
             }
 
-            return $transaction->load(['user:id,name', 'details.product:id,name,size,price,price_sales,price_agen,price_umum']);
+            return $transaction->load(['user:id,name', 'details.product:id,name,size,price,price_member,price_umum']);
         });
 
         if ($request->expectsJson()) {
             $availableProducts = Product::available()
                 ->orderBy('name')
-                ->get(['id', 'name', 'size', 'price', 'price_sales', 'price_agen', 'price_umum', 'stock']);
+                ->get(['id', 'name', 'size', 'price', 'price_member', 'price_umum', 'stock']);
+
+            $allCustomers = Customer::orderBy('name')
+                ->get(['id', 'name', 'phone', 'is_member']);
 
             return response()->json([
                 'message' => 'Transaksi berhasil disimpan.',
                 'transaction' => $transaction,
                 'products' => $availableProducts,
+                'customers' => $allCustomers,
             ], 201);
         }
 

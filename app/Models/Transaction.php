@@ -23,13 +23,11 @@ class Transaction extends Model
         self::PAYMENT_DEBIT => 'Kartu Debit / EDC',
     ];
 
-    public const CUSTOMER_SALES = 'sales';
-    public const CUSTOMER_AGEN = 'agen';
+    public const CUSTOMER_MEMBER = 'member';
     public const CUSTOMER_UMUM = 'umum';
 
     public const CUSTOMER_TYPES = [
-        self::CUSTOMER_SALES => 'Sales',
-        self::CUSTOMER_AGEN => 'Agen',
+        self::CUSTOMER_MEMBER => 'Member',
         self::CUSTOMER_UMUM => 'Umum',
     ];
 
@@ -86,9 +84,12 @@ class Transaction extends Model
      */
     public function getCustomerTypeLabelAttribute(): string
     {
-        $type = $this->customer_type ?: self::CUSTOMER_UMUM;
+        $type = strtolower(trim((string) ($this->customer_type ?: self::CUSTOMER_UMUM)));
 
-        return self::CUSTOMER_TYPES[$type] ?? ucfirst((string) $type);
+        return match ($type) {
+            self::CUSTOMER_MEMBER, 'sales', 'agen' => 'Member',
+            default => 'Umum',
+        };
     }
 
     /**
