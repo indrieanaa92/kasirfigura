@@ -196,20 +196,20 @@
             </div>
 
             {{-- Monthly Transactions Table --}}
-            <div class="xl:col-span-7 rounded-2xl bg-white border border-stone-200/80 shadow-sm overflow-hidden flex flex-col">
+            <div class="xl:col-span-7 rounded-2xl bg-white border border-stone-200/80 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between gap-3 bg-white">
                     <div>
                         <h2 class="text-base font-bold text-stone-900">Riwayat Transaksi</h2>
-                        <p class="text-xs text-stone-500">Menampilkan transaksi bulan {{ $monthLabel }}</p>
+                        <p class="text-xs text-stone-500">Menampilkan seluruh transaksi bulan {{ $monthLabel }}</p>
                     </div>
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200/70 px-3 py-1 text-xs font-semibold text-amber-800">
                         {{ $transactions->count() }} Transaksi
                     </span>
                 </div>
 
-                <div class="overflow-x-auto overflow-y-auto max-h-[285px] divide-y divide-stone-100">
+                <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                        <thead class="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-xs text-xs uppercase text-amber-900 font-semibold shadow-xs">
+                        <thead class="bg-amber-50/70 text-xs uppercase text-amber-900 font-semibold">
                             <tr>
                                 <th class="px-5 py-3">Invoice</th>
                                 <th class="px-5 py-3">Tanggal</th>
@@ -262,18 +262,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                @if ($transactions->count() > 4)
-                    <div class="px-6 py-2.5 bg-stone-50/80 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
-                        <span>Menampilkan 3–4 transaksi awal</span>
-                        <span class="inline-flex items-center gap-1 text-amber-700 font-semibold">
-                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                            Scroll ke bawah untuk riwayat lainnya
-                        </span>
-                    </div>
-                @endif
             </div>
         </section>
     </main>

@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@kasirfigura.test'],
+            ['email' => 'admin@inulwijayapigura99'],
             [
                 'name' => 'Admin Galeri Figura',
                 'password' => Hash::make('Pasuruan99'),
@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'kasir@kasirfigura.test'],
+            ['email' => 'kasir@inulwijayapigura99'],
             [
                 'name' => 'Kasir Utama',
                 'password' => Hash::make('Pasuruan99'),

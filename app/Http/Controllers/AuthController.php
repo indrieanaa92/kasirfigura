@@ -38,12 +38,11 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'string'],
             'password' => ['required', 'string'],
             'login_as' => ['required', 'in:admin,kasir'],
         ], [
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
+            'email.required' => 'Email / Username wajib diisi.',
             'password.required' => 'Kata sandi wajib diisi.',
             'login_as.in' => 'Tipe login harus Admin atau Kasir.',
         ]);
