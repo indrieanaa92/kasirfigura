@@ -1,10 +1,8 @@
 {{-- Mobile & Tablet Sticky Top Bar (< lg) --}}
 <header class="lg:hidden sticky top-0 z-30 flex items-center justify-between bg-gradient-to-r from-stone-950 via-stone-900 to-amber-950 px-4 py-3 text-white shadow-md">
     <div class="flex items-center gap-3 min-w-0">
-        <div class="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow ring-1 ring-amber-300/30">
-            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm4 4h8v6H8V9z" />
-            </svg>
+        <div class="h-9 w-9 shrink-0 rounded-xl overflow-hidden bg-stone-950 flex items-center justify-center shadow ring-1 ring-amber-300/30">
+            <img src="{{ asset('images/icon.jpeg') }}" alt="Logo Inul Wijaya Pigura" class="h-full w-full object-cover">
         </div>
         <div class="min-w-0">
             <p class="text-sm font-bold truncate">Inul Wijaya Pigura</p>
@@ -38,10 +36,8 @@
     <div>
         <div class="p-6 border-b border-white/10 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-900/40 ring-1 ring-amber-300/30">
-                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm4 4h8v6H8V9z" />
-                    </svg>
+                <div class="h-10 w-10 shrink-0 rounded-xl overflow-hidden bg-stone-950 flex items-center justify-center shadow-lg shadow-amber-900/40 ring-1 ring-amber-300/30">
+                    <img src="{{ asset('images/icon.jpeg') }}" alt="Logo Inul Wijaya Pigura" class="h-full w-full object-cover">
                 </div>
                 <div>
                     <p class="text-sm font-bold tracking-wide text-white">Inul Wijaya Pigura</p>

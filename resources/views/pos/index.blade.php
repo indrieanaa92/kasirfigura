@@ -69,10 +69,8 @@
     <header class="sticky top-0 z-30 bg-gradient-to-r from-stone-950 via-stone-900 to-amber-900 text-white shadow-lg shadow-stone-900/15 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md ring-1 ring-amber-300/30">
-                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm4 4h8v6H8V9z" />
-                    </svg>
+                <div class="h-10 w-10 shrink-0 rounded-xl overflow-hidden bg-stone-950 flex items-center justify-center shadow-md ring-1 ring-amber-300/30">
+                    <img src="{{ asset('images/icon.jpeg') }}" alt="Logo Inul Wijaya Pigura" class="h-full w-full object-cover">
                 </div>
                 <div>
                     <h1 class="text-lg font-bold tracking-tight">Inul Wijaya Pigura</h1>
@@ -85,6 +83,31 @@
                     <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span x-text="products.length"></span> Varian Figura Siap
                 </span>
+
+                {{-- Bluetooth Printer Button --}}
+                <button type="button"
+                        @click="btStatus === 'connected' ? disconnectBluetooth() : connectBluetooth()"
+                        :disabled="btStatus === 'connecting' || btStatus === 'printing'"
+                        :class="{
+                            'bg-emerald-600/80 border-emerald-400/50 text-white': btStatus === 'connected',
+                            'bg-blue-600/80 border-blue-400/50 text-white animate-pulse': btStatus === 'connecting' || btStatus === 'printing',
+                            'bg-white/10 border-white/15 text-white': btStatus === 'disconnected',
+                        }"
+                        class="min-h-[40px] inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition cursor-pointer">
+                    {{-- Bluetooth icon --}}
+                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 2l4 4-4 4V2zM12 14l4 4-4 4v-8zM12 10l-4 4 4 4" />
+                    </svg>
+                    <span x-text="{
+                        'disconnected': 'Printer BT',
+                        'connecting': 'Menghubungkan…',
+                        'connected': btDevice?.name || 'Printer Terhubung',
+                        'printing': 'Mencetak…'
+                    }[btStatus]"></span>
+                    <span x-show="btStatus === 'connected'" class="h-2 w-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                </button>
+
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit"
@@ -696,17 +719,76 @@
             </div>
 
             {{-- Screen-only Action Buttons --}}
-            <div class="mx-auto max-w-[340px] grid grid-cols-2 gap-2.5 no-print">
-                <button type="button"
-                        @click="printReceipt()"
-                        class="min-h-[44px] w-full rounded-xl bg-stone-900 hover:bg-stone-800 py-2.5 text-xs font-bold text-white shadow-lg transition cursor-pointer">
-                    Cetak Struk
-                </button>
-                <button type="button"
-                        @click="lastReceipt = null"
-                        class="min-h-[44px] w-full rounded-xl bg-gradient-to-r from-amber-700 to-orange-600 hover:from-amber-800 hover:to-orange-700 py-2.5 text-xs font-bold text-white shadow-lg transition cursor-pointer">
-                    Transaksi Baru
-                </button>
+            <div class="mx-auto max-w-[340px] space-y-2.5 no-print">
+                {{-- Direct Connection & Print Bar Inside Modal (BLE + Serial COM + RawBT) --}}
+                <div class="rounded-2xl bg-stone-900/95 border border-stone-700 p-3 text-white shadow-lg space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="h-2.5 w-2.5 rounded-full shrink-0"
+                                  :class="btStatus === 'connected' ? 'bg-emerald-400 animate-pulse' : (btStatus === 'connecting' || btStatus === 'printing' ? 'bg-blue-400 animate-pulse' : 'bg-stone-500')"></span>
+                            <span class="text-xs font-semibold truncate"
+                                  x-text="btStatus === 'connected' ? ('Terhubung: ' + (btDevice?.name || 'Printer Thermal')) : (btStatus === 'connecting' ? 'Menghubungkan Printer...' : (btStatus === 'printing' ? 'Mengirim ke Printer...' : 'Printer Langsung Belum Terhubung'))"></span>
+                        </div>
+                        <template x-if="btStatus === 'connected'">
+                            <button type="button"
+                                    @click="disconnectBluetooth()"
+                                    class="shrink-0 rounded-lg border border-rose-400/40 bg-rose-600/80 hover:bg-rose-600 px-2.5 py-1 text-[11px] font-bold text-white transition cursor-pointer">
+                                Putuskan
+                            </button>
+                        </template>
+                    </div>
+
+                    <template x-if="btStatus !== 'connected'">
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button type="button"
+                                    @click="connectBluetooth()"
+                                    :disabled="btStatus === 'connecting' || btStatus === 'printing'"
+                                    class="rounded-xl border border-blue-400/40 bg-blue-600 hover:bg-blue-500 px-2.5 py-2 text-[11px] font-bold text-white transition cursor-pointer flex items-center justify-center gap-1.5">
+                                <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l4 4-4 4V2zM12 14l4 4-4 4v-8zM12 10l-4 4 4 4" />
+                                </svg>
+                                Scan Bluetooth (BLE)
+                            </button>
+                            <button type="button"
+                                    @click="connectSerialPort()"
+                                    :disabled="btStatus === 'connecting' || btStatus === 'printing'"
+                                    class="rounded-xl border border-amber-400/40 bg-amber-600 hover:bg-amber-500 px-2.5 py-2 text-[11px] font-bold text-white transition cursor-pointer flex items-center justify-center gap-1.5">
+                                <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Pilih Port BT / USB
+                            </button>
+                        </div>
+                    </template>
+
+                    <template x-if="btStatus === 'connected'">
+                        <button type="button"
+                                @click="printReceiptBT()"
+                                class="min-h-[40px] w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2 text-xs font-bold text-white shadow transition cursor-pointer flex items-center justify-center gap-2">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            Cetak Langsung ke Printer
+                        </button>
+                    </template>
+
+                    <p class="text-[10px] text-stone-400 leading-tight">
+                        💡 Jika <b>Scan Bluetooth</b> kosong ("No compatible devices"), pasang/pair printer di Bluetooth Windows dulu lalu klik <b>Pilih Port BT / USB (COM)</b>.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button"
+                            @click="printReceipt()"
+                            class="min-h-[44px] w-full rounded-xl bg-stone-900 hover:bg-stone-800 py-2.5 text-xs font-bold text-white shadow-lg transition cursor-pointer">
+                        <span x-text="btStatus === 'connected' ? 'Cetak Struk (Langsung)' : 'Cetak Struk (Windows)'"></span>
+                    </button>
+                    <button type="button"
+                            @click="lastReceipt = null"
+                            class="min-h-[44px] w-full rounded-xl bg-gradient-to-r from-amber-700 to-orange-600 hover:from-amber-800 hover:to-orange-700 py-2.5 text-xs font-bold text-white shadow-lg transition cursor-pointer">
+                        Transaksi Baru
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -730,6 +812,13 @@
             cartNoticeTimer: null,
             lastReceipt: null,
             receiptWidth: '80mm',
+
+            // Bluetooth / Serial state (initialized in data)
+            btDevice: null,
+            btChar: null,
+            serialPort: null,
+            btMode: null, // 'ble' | 'serial'
+            btStatus: 'disconnected',
 
             // Dynamic items container rows
             rowCounter: 1,
@@ -893,8 +982,233 @@
                 this.lastReceipt = transaction;
             },
 
+            // ── Bluetooth Printer ────────────────────────────────────────────
+            async connectBluetooth() {
+                if (!navigator.bluetooth) {
+                    alert('Browser Anda tidak mendukung Web Bluetooth.\nGunakan Google Chrome (bukan Firefox/Safari).');
+                    return;
+                }
+                this.btStatus = 'connecting';
+                try {
+                    const device = await navigator.bluetooth.requestDevice({
+                        acceptAllDevices: true,
+                        optionalServices: [
+                            '000018f0-0000-1000-8000-00805f9b34fb', // common BLE printer service
+                            '49535343-fe7d-4ae5-8fa9-9fafd205e455', // ISSC transparent UART
+                            '0000ff00-0000-1000-8000-00805f9b34fb', // generic printer
+                            'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Xprinter
+                            '000018f0-0000-1000-8000-00805f9b34fb', // general
+                        ]
+                    });
+                    this.btDevice = device;
+                    this.btMode = 'ble';
+                    device.addEventListener('gattserverdisconnected', () => {
+                        this.btStatus = 'disconnected';
+                        this.btChar = null;
+                        this.btMode = null;
+                    });
+
+                    const server = await device.gatt.connect();
+                    // Coba service BLE printer satu per satu
+                    const knownServices = [
+                        '000018f0-0000-1000-8000-00805f9b34fb',
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+                        '0000ff00-0000-1000-8000-00805f9b34fb',
+                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+                    ];
+                    const knownChars = [
+                        '00002af1-0000-1000-8000-00805f9b34fb',
+                        '49535343-8841-43f4-a8d4-ecbe34729bb3',
+                        '0000ff02-0000-1000-8000-00805f9b34fb',
+                        'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f',
+                    ];
+                    let found = false;
+                    for (let i = 0; i < knownServices.length; i++) {
+                        try {
+                            const service = await server.getPrimaryService(knownServices[i]);
+                            const char    = await service.getCharacteristic(knownChars[i]);
+                            this.btChar   = char;
+                            found = true;
+                            break;
+                        } catch (_) { /* coba berikutnya */ }
+                    }
+                    if (!found) {
+                        // Fallback: ambil service & characteristic pertama
+                        const services = await server.getPrimaryServices();
+                        for (const svc of services) {
+                            const chars = await svc.getCharacteristics();
+                            if (chars.length) { this.btChar = chars[0]; found = true; break; }
+                        }
+                    }
+                    if (!found) throw new Error('Characteristic printer tidak ditemukan.');
+                    this.btStatus = 'connected';
+                } catch (err) {
+                    this.btStatus = 'disconnected';
+                    if (err.name !== 'NotFoundError') {
+                        alert('Gagal terhubung ke printer:\n' + err.message);
+                    }
+                }
+            },
+
+            async connectSerialPort() {
+                if (!('serial' in navigator)) {
+                    alert('Browser Anda tidak mendukung Web Serial API.\nGunakan Google Chrome atau Microsoft Edge di komputer/laptop.');
+                    return;
+                }
+                this.btStatus = 'connecting';
+                try {
+                    const port = await navigator.serial.requestPort();
+                    await port.open({ baudRate: 9600 });
+                    this.serialPort = port;
+                    this.btMode = 'serial';
+                    this.btDevice = { name: 'Port Serial BT/USB' };
+                    this.btStatus = 'connected';
+                } catch (err) {
+                    this.btStatus = 'disconnected';
+                    if (err.name !== 'NotFoundError') {
+                        alert('Gagal membuka port printer:\n' + err.message + '\n\nPastikan printer Bluetooth sudah di-pair di Windows dan menyala.');
+                    }
+                }
+            },
+
+            async disconnectBluetooth() {
+                if (this.btMode === 'serial' && this.serialPort) {
+                    try {
+                        await this.serialPort.close();
+                    } catch (_) {}
+                    this.serialPort = null;
+                }
+                if (this.btDevice && this.btDevice.gatt && this.btDevice.gatt.connected) {
+                    this.btDevice.gatt.disconnect();
+                }
+                this.btDevice = null;
+                this.btChar   = null;
+                this.btMode   = null;
+                this.btStatus = 'disconnected';
+            },
+
+            // ESC/POS helpers
+            _esc: {
+                INIT:       [0x1B, 0x40],
+                CUT:        [0x1D, 0x56, 0x41, 0x00],
+                FEED:       [0x0A],
+                ALIGN_L:    [0x1B, 0x61, 0x00],
+                ALIGN_C:    [0x1B, 0x61, 0x01],
+                ALIGN_R:    [0x1B, 0x61, 0x02],
+                BOLD_ON:    [0x1B, 0x45, 0x01],
+                BOLD_OFF:   [0x1B, 0x45, 0x00],
+                DOUBLE_ON:  [0x1D, 0x21, 0x11],
+                DOUBLE_OFF: [0x1D, 0x21, 0x00],
+            },
+
+            _textBytes(str) {
+                return new TextEncoder().encode(str);
+            },
+            _bytes(...parts) {
+                const all = [];
+                for (const p of parts) {
+                    if (Array.isArray(p))             all.push(...p);
+                    else if (p instanceof Uint8Array) all.push(...p);
+                    else                              all.push(...new TextEncoder().encode(String(p)));
+                }
+                return new Uint8Array(all);
+            },
+            _padLine(left, right, width = 32) {
+                const pad = Math.max(1, width - left.length - right.length);
+                return left + ' '.repeat(pad) + right + '\n';
+            },
+
+            async printReceiptBT() {
+                if ((!this.btChar && !this.serialPort) || !this.lastReceipt) return;
+                this.btStatus = 'printing';
+                try {
+                    const r   = this.lastReceipt;
+                    const W   = this.receiptWidth === '58mm' ? 32 : 42;
+                    const div = '-'.repeat(W);
+                    const esc = this._esc;
+
+                    const lines = [];
+                    const add   = (...parts) => lines.push(this._bytes(...parts));
+
+                    // Header
+                    add(esc.INIT);
+                    add(esc.ALIGN_C, esc.BOLD_ON, esc.DOUBLE_ON,
+                        '{{ config("store.name", "INUL WIJAYA PIGURA") }}\n', esc.DOUBLE_OFF, esc.BOLD_OFF);
+                    add(esc.ALIGN_C, '{{ config("store.address", "") }}\n');
+                    add(esc.ALIGN_C, 'Telp: {{ config("store.phone", "") }}\n');
+                    add(div + '\n');
+
+                    // Meta
+                    add(esc.ALIGN_L);
+                    add(this._padLine('No.Struk', r.invoice_number, W));
+                    add(this._padLine('Tanggal',  this.formatDate(r.created_at), W));
+                    add(this._padLine('Kasir',    r.user?.name || '{{ auth()->user()->name }}', W));
+                    add(this._padLine('Pembeli',  r.customer_name || '-', W));
+                    add(this._padLine('Status',   r.customer_type_label || (r.customer_type === 'member' ? 'Member' : 'Umum'), W));
+                    add(this._padLine('Bayar',    r.payment_method_label || r.payment_method, W));
+                    add(div + '\n');
+
+                    // Items
+                    for (const d of (r.details || [])) {
+                        const name  = (d.product?.name || 'Figura').substring(0, W);
+                        const size  = d.product?.size || '-';
+                        const qty   = d.quantity;
+                        const price = this.formatRupiah(d.unit_price || (d.subtotal / d.quantity));
+                        const sub   = this.formatRupiah(d.subtotal);
+                        add(esc.BOLD_ON, name + '\n', esc.BOLD_OFF);
+                        add(this._padLine(`  ${size} x${qty} @${price}`, sub, W));
+                    }
+                    add(div + '\n');
+
+                    // Totals
+                    add(esc.BOLD_ON, this._padLine('TOTAL', this.formatRupiah(r.total_amount), W), esc.BOLD_OFF);
+                    add(this._padLine('DITERIMA', this.formatRupiah(r.paid_amount), W));
+                    add(this._padLine('KEMBALI',  this.formatRupiah(r.change_amount), W));
+                    add(div + '\n');
+
+                    // Footer
+                    add(esc.ALIGN_C);
+                    add('Terima Kasih Atas Kunjungan Anda\n');
+                    add('Barang yang dibeli tidak dapat dikembalikan\n');
+                    add(esc.FEED, esc.FEED, esc.FEED, esc.CUT);
+
+                    const all = this._bytes(...lines.map(l => Array.from(l)));
+
+                    if (this.btMode === 'serial' && this.serialPort && this.serialPort.writable) {
+                        const writer = this.serialPort.writable.getWriter();
+                        try {
+                            await writer.write(all);
+                        } finally {
+                            writer.releaseLock();
+                        }
+                    } else if (this.btChar) {
+                        // Kirim ke printer dalam chunk 100 byte (kompatibel untuk semua BLE thermal printer)
+                        const CHUNK = 100;
+                        for (let i = 0; i < all.length; i += CHUNK) {
+                            const chunk = all.slice(i, i + CHUNK);
+                            if (this.btChar.properties?.writeWithoutResponse && this.btChar.writeValueWithoutResponse) {
+                                await this.btChar.writeValueWithoutResponse(chunk);
+                            } else if (this.btChar.writeValueWithResponse) {
+                                await this.btChar.writeValueWithResponse(chunk);
+                            } else {
+                                await this.btChar.writeValue(chunk);
+                            }
+                            await new Promise(r => setTimeout(r, 45));
+                        }
+                    }
+                    this.btStatus = 'connected';
+                } catch (err) {
+                    this.btStatus = 'connected';
+                    alert('Gagal mencetak ke printer:\n' + err.message);
+                }
+            },
+
             printReceipt() {
-                window.print();
+                if (this.btStatus === 'connected' && (this.btChar || this.serialPort)) {
+                    this.printReceiptBT();
+                } else {
+                    window.print();
+                }
             },
 
             async deleteTransaction(trx) {
