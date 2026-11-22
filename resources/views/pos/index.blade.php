@@ -10,12 +10,14 @@
 
     @media print {
         @page {
-            margin: 4mm;
+            size: 55mm auto;
+            margin: 1mm 1.5mm;
         }
 
         html, body {
             margin: 0 !important;
             padding: 0 !important;
+            width: 52mm !important;
             background: #ffffff !important;
         }
 
@@ -33,22 +35,18 @@
         }
 
         #printable-receipt {
-            width: 100% !important;
-            max-width: 72mm !important;
-            margin: 0 auto !important;
-            padding: 2mm 1mm !important;
+            width: 50mm !important;
+            max-width: 50mm !important;
+            margin: 0 !important;
+            padding: 1mm 0.5mm !important;
             box-shadow: none !important;
             border: none !important;
             border-radius: 0 !important;
             background: #ffffff !important;
             color: #000000 !important;
-            font-size: 11px !important;
-            line-height: 1.35 !important;
-        }
-
-        #printable-receipt.receipt-58 {
-            max-width: 50mm !important;
-            font-size: 10px !important;
+            font-size: 9.5px !important;
+            line-height: 1.3 !important;
+            overflow: hidden !important;
         }
 
         #printable-receipt * {
@@ -613,13 +611,13 @@
 
     </main>
 
-    {{-- MODAL STRUK CETAK THERMAL (58mm / 80mm) --}}
+    {{-- MODAL STRUK CETAK THERMAL (50/55mm) --}}
     <div id="receipt-modal-backdrop"
          x-show="lastReceipt"
          x-cloak
          class="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-stone-950/60 backdrop-blur-xs p-4 overflow-y-auto">
         <div class="w-full max-w-md my-auto space-y-3">
-            {{-- Screen-only Top Bar (Width Switcher + Status) --}}
+            {{-- Screen-only Top Bar (Status & Fixed 50/55mm Badge) --}}
             <div class="flex items-center justify-between rounded-2xl bg-stone-900 px-4 py-2.5 text-white shadow-lg no-print">
                 <span class="inline-flex items-center gap-2 text-xs font-semibold text-emerald-300">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -627,28 +625,20 @@
                     </svg>
                     Struk Siap Dicetak
                 </span>
-                <div class="inline-flex items-center gap-1 rounded-lg bg-white/10 p-0.5 text-[11px]">
-                    <button type="button"
-                            @click="receiptWidth = '58mm'"
-                            :class="receiptWidth === '58mm' ? 'bg-amber-500 text-stone-950 font-bold' : 'text-stone-200'"
-                            class="rounded-md px-2 py-1 transition cursor-pointer">58mm</button>
-                    <button type="button"
-                            @click="receiptWidth = '80mm'"
-                            :class="receiptWidth === '80mm' ? 'bg-amber-500 text-stone-950 font-bold' : 'text-stone-200'"
-                            class="rounded-md px-2 py-1 transition cursor-pointer">80mm</button>
-                </div>
+                <span class="rounded-lg bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-stone-950">
+                    50/55mm
+                </span>
             </div>
 
-            {{-- Clean Thermal-Ready Receipt Card --}}
+            {{-- Clean Thermal-Ready Receipt Card (Fixed 50/55mm) --}}
             <div id="printable-receipt"
-                 :class="receiptWidth === '58mm' ? 'receipt-58 max-w-[260px]' : 'receipt-80 max-w-[340px]'"
-                 class="receipt-paper mx-auto w-full rounded-2xl bg-white p-5 text-stone-900 shadow-2xl border border-stone-200 font-mono text-xs leading-relaxed">
+                 class="receipt-paper receipt-58 max-w-[235px] mx-auto w-full rounded-2xl bg-white p-4 text-stone-900 shadow-2xl border border-stone-200 font-mono text-[11px] leading-snug">
 
                 {{-- Store Header & Address --}}
-                <div class="text-center border-b border-dashed border-stone-400 receipt-divider pb-3">
-                    <h3 class="text-sm font-extrabold tracking-wider uppercase text-stone-900">{{ config('store.name') }}</h3>
-                    <p class="mt-1 text-[11px] text-stone-600 leading-snug">{{ config('store.address') }}</p>
-                    <p class="mt-0.5 text-[11px] text-stone-600">Telp: {{ config('store.phone') }}</p>
+                <div class="text-center border-b border-dashed border-stone-400 receipt-divider pb-2.5">
+                    <h3 class="text-xs font-extrabold tracking-normal uppercase text-stone-900 whitespace-nowrap">{{ config('store.name') }}</h3>
+                    <p class="mt-0.5 text-[10px] text-stone-600 leading-tight">{{ config('store.address') }}</p>
+                    <p class="mt-0.5 text-[10px] text-stone-600">Telp: {{ config('store.phone') }}</p>
                 </div>
 
                 {{-- Transaction Metadata --}}
@@ -811,7 +801,7 @@
             cartNotice: '',
             cartNoticeTimer: null,
             lastReceipt: null,
-            receiptWidth: '80mm',
+            receiptWidth: '58mm',
 
             // Bluetooth / Serial state (initialized in data)
             btDevice: null,
@@ -1114,8 +1104,16 @@
                 return new Uint8Array(all);
             },
             _padLine(left, right, width = 32) {
-                const pad = Math.max(1, width - left.length - right.length);
-                return left + ' '.repeat(pad) + right + '\n';
+                const l = String(left ?? '');
+                const r = String(right ?? '');
+                if (l.length + 1 + r.length > width) {
+                    const maxLeft = Math.max(1, width - r.length - 1);
+                    const trimmedLeft = l.substring(0, maxLeft);
+                    const pad = Math.max(1, width - trimmedLeft.length - r.length);
+                    return trimmedLeft + ' '.repeat(pad) + r + '\n';
+                }
+                const pad = Math.max(1, width - l.length - r.length);
+                return l + ' '.repeat(pad) + r + '\n';
             },
 
             async printReceiptBT() {
@@ -1123,17 +1121,17 @@
                 this.btStatus = 'printing';
                 try {
                     const r   = this.lastReceipt;
-                    const W   = this.receiptWidth === '58mm' ? 32 : 42;
+                    const W   = 32; // Ukuran tetap 50/55mm (32 karakter)
                     const div = '-'.repeat(W);
                     const esc = this._esc;
 
                     const lines = [];
                     const add   = (...parts) => lines.push(this._bytes(...parts));
 
-                    // Header
+                    // Header (Gunakan ukuran font normal BOLD agar "INUL WIJAYA PIGURA" 18 karakter muat 1 baris utuh di kertas 50/55mm)
                     add(esc.INIT);
-                    add(esc.ALIGN_C, esc.BOLD_ON, esc.DOUBLE_ON,
-                        '{{ config("store.name", "INUL WIJAYA PIGURA") }}\n', esc.DOUBLE_OFF, esc.BOLD_OFF);
+                    add(esc.ALIGN_C, esc.BOLD_ON,
+                        '{{ config("store.name", "INUL WIJAYA PIGURA") }}\n', esc.BOLD_OFF);
                     add(esc.ALIGN_C, '{{ config("store.address", "") }}\n');
                     add(esc.ALIGN_C, 'Telp: {{ config("store.phone", "") }}\n');
                     add(div + '\n');
