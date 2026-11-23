@@ -22,10 +22,9 @@
             </div>
 
             <div class="mt-6 sm:mt-8 rounded-2xl bg-black/25 p-4 backdrop-blur-sm border border-amber-400/20 text-xs space-y-1.5 text-stone-200">
-                <p class="font-semibold text-amber-300">Akun Login:</p>
-                <p>Admin: <span class="font-mono text-white break-all">admin@inulwijayapigura99</span></p>
+                <p class="font-semibold text-amber-300">Akun Login Kasir:</p>
                 <p>Kasir: <span class="font-mono text-white break-all">kasir@inulwijayapigura99</span></p>
-                <p>Password: <span class="font-mono text-white">Pasuruan99</span></p>
+                <p>Password: <span class="font-mono text-white">12344321</span></p>
             </div>
         </div>
 
@@ -70,7 +69,7 @@
                            value="{{ old('email') }}"
                            required
                            autofocus
-                           placeholder="admin@inulwijayapigura99 atau kasir@inulwijayapigura99"
+                           placeholder="Masukkan email atau username login"
                            class="w-full min-h-[44px] rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm text-stone-900 focus:border-amber-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-600/20">
                 </div>
 
